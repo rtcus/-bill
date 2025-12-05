@@ -1,0 +1,3493 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>账单管理系统</title>
+    
+    <!-- 引入必要的CSS库 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- 账单管理专用CSS -->
+    <style>
+        :root {
+            --primary-color: #1a3c8b;
+            --secondary-color: #2d5aa0;
+            --accent-color: #4a90e2;
+            --light-color: #f8f9fa;
+            --dark-color: #343a40;
+            --success-color: #28a745;
+            --warning-color: #ffc107;
+            --danger-color: #dc3545;
+            --border-radius: 6px;
+        }
+
+        /* 登录页面样式 */
+        .login-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .login-header h3 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .login-header p {
+            color: #666;
+            font-size: 0.9rem;
+        }
+
+        /* 用户信息栏 */
+        .user-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 15px;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .user-info .username {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        .logout-btn {
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+
+        /* 主页面样式 */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: none; /* 默认隐藏，登录后显示 */
+        }
+
+        .page-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .page-header h2 {
+            color: var(--primary-color);
+            font-weight: 600;
+            margin-bottom: 5px;
+            font-size: 1.8rem;
+        }
+
+        .card {
+            border: none;
+            border-radius: var(--border-radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+        }
+
+        .card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1rem;
+        }
+
+        .form-control, .form-select {
+            border-radius: var(--border-radius);
+            border: 1px solid #ddd;
+            padding: 8px 12px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            padding: 8px 16px;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--secondary-color);
+            border-color: var(--secondary-color);
+        }
+
+        .btn-outline-primary {
+            color: var(--primary-color);
+            border-color: var(--primary-color);
+            border-radius: var(--border-radius);
+            font-size: 0.95rem;
+        }
+
+        .btn-outline-primary:hover {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        /* 统计卡片样式 */
+        .status-card {
+            background: white;
+            border-radius: var(--border-radius);
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            transition: transform 0.3s, box-shadow 0.3s;
+            height: 100%;
+        }
+
+        .status-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-card h5 {
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .status-card .count {
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .text-primary { color: var(--primary-color) !important; }
+        .text-warning { color: var(--warning-color) !important; }
+        .text-info { color: var(--accent-color) !important; }
+        .text-success { color: var(--success-color) !important; }
+
+        /* 表格容器设置 */
+        .table-card-container {
+            display: flex;
+            flex-direction: column;
+            height: 600px;
+            border-radius: var(--border-radius);
+            background: white;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            overflow: hidden;
+        }
+
+        .table-card-header {
+            background-color: white;
+            border-bottom: 1px solid #eaeaea;
+            padding: 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+            font-size: 1rem;
+            flex-shrink: 0;
+        }
+
+        .table-content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .table-container {
+            border-radius: 0;
+            overflow-x: auto;
+            overflow-y: auto;
+            width: 100%;
+            flex: 1;
+            border-bottom: 1px solid #eaeaea;
+        }
+
+        .table {
+            width: 100%;
+            margin-bottom: 0;
+            table-layout: auto;
+        }
+
+        .table th {
+            background-color: #f8f9fa;
+            color: var(--primary-color);
+            font-weight: 600;
+            border-top: none;
+            font-size: 0.9rem;
+            padding: 10px 12px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .table td {
+            font-size: 0.9rem;
+            padding: 10px 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 200px;
+        }
+
+        .table-warning {
+            background-color: #fff3cd !important;
+        }
+
+        .table-info {
+            background-color: #e3f2fd !important;
+        }
+
+        .table-success {
+            background-color: #e8f5e9 !important;
+        }
+
+        .fee-edit-input {
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .preview-table-container {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .sticky-header {
+            position: sticky;
+            top: 0;
+            background: #f8f9fa;
+            z-index: 10;
+        }
+
+        /* 分页控件 */
+        .pagination-container {
+            background: #f8f9fa;
+            padding: 15px 20px;
+            border-top: 1px solid #eaeaea;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .pagination {
+            margin: 0;
+            justify-content: center;
+            flex: 1;
+        }
+
+        .pagination-info {
+            text-align: center;
+            color: #6c757d;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            margin-right: 20px;
+        }
+
+        .page-size-selector {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+
+        .page-size-selector select {
+            width: auto;
+            padding: 5px 10px;
+        }
+
+        /* 模态框样式 */
+        .modal-content {
+            border-radius: var(--border-radius);
+            border: none;
+        }
+
+        .modal-header {
+            background-color: var(--primary-color);
+            color: white;
+            border-bottom: none;
+        }
+
+        .modal-footer {
+            border-top: 1px solid #eaeaea;
+        }
+
+        /* 徽章样式 */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .bg-warning {
+            background-color: var(--warning-color) !important;
+        }
+
+        .bg-info {
+            background-color: var(--accent-color) !important;
+        }
+
+        .bg-success {
+            background-color: var(--success-color) !important;
+        }
+
+        .bg-secondary {
+            background-color: #6c757d !important;
+        }
+
+        /* 加载和空数据状态 */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 40px;
+            color: #6c757d;
+        }
+
+        /* 自定义费用项 */
+        .custom-fee-item {
+            margin-bottom: 15px;
+        }
+
+        /* 响应式调整 */
+        @media (max-width: 768px) {
+            .table-card-container {
+                height: 500px;
+            }
+            
+            .pagination-container {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px 15px;
+            }
+            
+            .pagination-info {
+                margin-right: 0;
+                order: 1;
+            }
+            
+            .pagination {
+                order: 2;
+            }
+            
+            .page-size-selector {
+                order: 3;
+            }
+
+            .user-info {
+                top: 10px;
+                right: 10px;
+                padding: 8px 12px;
+                font-size: 0.9rem;
+            }
+        }
+
+        /* 搜索表单调整 */
+        .search-form .row {
+            margin-bottom: 0;
+        }
+
+        .search-form .col-md-3 {
+            margin-bottom: 10px;
+        }
+
+        /* 登录表单样式 */
+        #loginForm input {
+            border-radius: 5px;
+            padding: 12px;
+            border: 1px solid #ddd;
+            transition: border-color 0.3s;
+        }
+
+        #loginForm input:focus {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 0.2rem rgba(26, 60, 139, 0.25);
+        }
+
+        #loginForm .form-check-input:checked {
+            background-color: var(--primary-color);
+            border-color: var(--primary-color);
+        }
+
+        .login-error {
+            color: var(--danger-color);
+            font-size: 0.9rem;
+            margin-top: 10px;
+            text-align: center;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- 登录页面 -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <div class="login-header">
+                <h3>账单管理系统</h3>
+                <p>使用 LeanCloud 账户登录</p>
+            </div>
+            <form id="loginForm">
+                <div class="mb-3">
+                    <label for="loginUsername" class="form-label">用户名</label>
+                    <input type="text" class="form-control" id="loginUsername" placeholder="请输入用户名" required>
+                </div>
+                <div class="mb-3">
+                    <label for="loginPassword" class="form-label">密码</label>
+                    <input type="password" class="form-control" id="loginPassword" placeholder="请输入密码" required>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" class="form-check-input" id="rememberMe">
+                    <label class="form-check-label" for="rememberMe">记住我</label>
+                </div>
+                <div class="login-error" id="loginError"></div>
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> 登录
+                    </button>
+                </div>
+                <div class="mt-3 text-center text-muted">
+                    <small>使用 LeanCloud _User 表中的账户登录</small>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 主页面内容 -->
+    <div class="container-fluid" id="mainContent">
+        <!-- 页面标题 -->
+        <div class="page-header">
+            <h2>账单管理系统</h2>
+            <p class="text-muted">费用账单管理与统计</p>
+        </div>
+
+        <!-- 查询条件 -->
+        <div class="card">
+            <div class="card-header">
+                查询条件
+            </div>
+            <div class="card-body">
+                <div class="row g-2 search-form">
+                    <div class="col-md-3">
+                        <label for="billDateRange" class="form-label">账单日期</label>
+                        <input type="text" class="form-control date-input" id="billDateRange" placeholder="选择日期范围">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="billStatusFilter" class="form-label">账单状态</label>
+                        <select class="form-select" id="billStatusFilter">
+                            <option value="">全部状态</option>
+                            <option value="未确认">未确认</option>
+                            <option value="已确认">已确认</option>
+                            <option value="已收款">已收款</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="companyNameFilter" class="form-label">公司名称</label>
+                        <input type="text" class="form-control" id="companyNameFilter" placeholder="输入公司名称">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <div class="w-100">
+                            <button class="btn btn-primary w-100" id="searchBills">
+                                <i class="fas fa-search"></i> 查询
+                            </button>
+                            <button class="btn btn-outline-secondary w-100 mt-1" id="clearBills">
+                                <i class="fas fa-undo"></i> 清空
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计卡片 -->
+        <div class="row mt-3">
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">总金额</h5>
+                        <div class="count text-primary" id="totalAmount">¥0.00</div>
+                        <p class="card-text">所有账单总额</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">未确认</h5>
+                        <div class="count text-warning" id="unconfirmedAmount">¥0.00</div>
+                        <p class="card-text">待确认金额</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">已确认</h5>
+                        <div class="count text-info" id="confirmedAmount">¥0.00</div>
+                        <p class="card-text">已确认金额</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3">
+                <div class="card status-card">
+                    <div class="card-body text-center">
+                        <h5 class="card-title">账单数量</h5>
+                        <div class="count text-success" id="billCount">0</div>
+                        <p class="card-text">总账单数</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 表格和分页统一容器 -->
+        <div class="table-card-container mt-4">
+            <div class="table-card-header d-flex justify-content-between align-items-center">
+                <span>账单列表</span>
+                <div>
+                    <button class="btn btn-sm btn-outline-primary me-2" id="importBills">
+                        <i class="fas fa-upload"></i> 导入
+                    </button>
+                    <button class="btn btn-sm btn-outline-success me-2" id="exportBills">
+                        <i class="fas fa-download"></i> 导出
+                    </button>
+                    <button class="btn btn-sm btn-primary" id="generateBill">
+                        <i class="fas fa-plus"></i> 生成账单
+                    </button>
+                </div>
+            </div>
+            
+            <div class="table-content-wrapper">
+                <!-- 表格内容区域 -->
+                <div class="table-container">
+                    <table class="table table-hover" id="billsTable">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>账单编号</th>
+                                <th>账单日期</th>
+                                <th>公司名称</th>
+                                <th>总金额</th>
+                                <th>币种</th>
+                                <th>账单状态</th>
+                                <th>支付日期</th>
+                                <th>备注</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- 数据将通过JavaScript动态填充 -->
+                        </tbody>
+                    </table>
+                </div>
+                
+                <!-- 固定在容器底部的分页控件 -->
+                <div class="pagination-container" id="billsPaginationContainer">
+                    <div class="pagination-info" id="billsPaginationInfo">
+                        共 0 页，每页显示 10 条，共 0 条记录
+                    </div>
+                    <nav aria-label="Page navigation">
+                        <ul class="pagination" id="billsPagination">
+                            <!-- 分页将通过JavaScript动态生成 -->
+                        </ul>
+                    </nav>
+                    <div class="page-size-selector">
+                        <span>每页显示：</span>
+                        <select class="form-select form-select-sm" id="billsPageSizeSelect">
+                            <option value="10">10条</option>
+                            <option value="50">50条</option>
+                            <option value="100">100条</option>
+                            <option value="200">200条</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 模态框区域 ========== -->
+
+    <!-- 生成账单模态框 -->
+    <div class="modal fade" id="generateBillModal" tabindex="-1" aria-labelledby="generateBillModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="generateBillModalLabel">生成账单</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="companyName" class="form-label">公司名称 *</label>
+                            <input type="text" class="form-control" id="companyName" placeholder="输入公司名称" required>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="billYear" class="form-label">年份 *</label>
+                            <select class="form-select" id="billYear" required>
+                                <option value="">选择年份</option>
+                                <!-- 年份选项将通过JavaScript动态生成 -->
+                            </select>
+                        </div>
+                        <div class="col-md-2">
+                            <label for="billMonth" class="form-label">月份 *</label>
+                            <select class="form-select" id="billMonth" required>
+                                <option value="">选择月份</option>
+                                <!-- 月份选项将通过JavaScript动态生成 -->
+                            </select>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="searchCustomsData">
+                                <i class="fas fa-search"></i> 查询报关数据
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label for="searchContainerNo" class="form-label">柜号查询</label>
+                            <input type="text" class="form-control" id="searchContainerNo" placeholder="输入柜号">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchBillNo" class="form-label">提单号查询</label>
+                            <input type="text" class="form-control" id="searchBillNo" placeholder="输入提单号">
+                        </div>
+                        <div class="col-md-4">
+                            <label for="searchCustomsNo" class="form-label">报关单号查询</label>
+                            <input type="text" class="form-control" id="searchCustomsNo" placeholder="输入报关单号">
+                        </div>
+                    </div>
+                    
+                    <!-- 报关数据表格 -->
+                    <div class="table-responsive mb-4" style="max-height: 300px;">
+                        <table class="table table-sm table-bordered" id="customsDataTable">
+                            <thead class="table-light">
+                                <tr>
+                                    <th width="50">
+                                        <input type="checkbox" id="selectAllItems">
+                                    </th>
+                                    <th>序号</th>
+                                    <th>到港日期</th>
+                                    <th>申报日期</th>
+                                    <th>提单号</th>
+                                    <th>柜号</th>
+                                    <th>报关单号</th>
+                                    <th>境内收发货人</th>
+                                    <th>消费使用单位</th>
+                                    <th>国家</th>
+                                    <th>品名</th>
+                                </tr>
+                            </thead>
+                            <tbody id="customsDataBody">
+                                <!-- 报关数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 费用输入区域 -->
+                    <div class="card mb-4">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>费用设置</span>
+                            <button class="btn btn-sm btn-outline-primary" id="applyAllFees">
+                                <i class="fas fa-sync-alt"></i> 应用到所有选中项
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="row g-3" id="feeInputs">
+                                <div class="col-md-3">
+                                    <label for="customsFee" class="form-label">报关费</label>
+                                    <input type="number" class="form-control fee-input" id="customsFee" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="inspectionFee" class="form-label">查验服务费</label>
+                                    <input type="number" class="form-control fee-input" id="inspectionFee" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="documentFee" class="form-label">代理换单费</label>
+                                    <input type="number" class="form-control fee-input" id="documentFee" step="0.01" min="0" value="0">
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="otherFee1" class="form-label">其他费用1</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="otherFee1Name" placeholder="费用名称" value="其他费用1">
+                                        <input type="number" class="form-control fee-input" id="otherFee1" step="0.01" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="otherFee2" class="form-label">其他费用2</label>
+                                    <div class="input-group">
+                                        <input type="text" class="form-control" id="otherFee2Name" placeholder="费用名称" value="其他费用2">
+                                        <input type="number" class="form-control fee-input" id="otherFee2" step="0.01" min="0" value="0">
+                                    </div>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-outline-primary w-100" id="addCustomFee">
+                                        <i class="fas fa-plus"></i> 添加自定义费用
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- 自定义费用区域 -->
+                            <div id="customFeesContainer" class="mt-3">
+                                <!-- 自定义费用将通过JavaScript动态添加 -->
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 账单预览 -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>账单预览</span>
+                            <div>
+                                <!-- 添加搜索框 -->
+                                <div class="input-group input-group-sm me-2" style="width: 400px;">
+                                    <select class="form-select" id="billPreviewSearchType" style="width: 120px;">
+                                        <option value="containerNo">柜号</option>
+                                        <option value="billNo">提单号</option>
+                                        <option value="customsNo">报关单号</option>
+                                    </select>
+                                    <input type="text" class="form-control" id="billPreviewSearch" placeholder="输入搜索内容">
+                                    <button class="btn btn-outline-secondary" type="button" id="billPreviewSearchBtn">
+                                        <i class="fas fa-search"></i> 搜索
+                                    </button>
+                                </div>
+                                <button class="btn btn-sm btn-outline-success me-2" id="previewBill">
+                                    <i class="fas fa-eye"></i> 预览
+                                </button>
+                                <button class="btn btn-sm btn-outline-primary" id="exportBillExcel">
+                                    <i class="fas fa-file-excel"></i> 导出Excel
+                                </button>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="preview-table-container">
+                                <table class="table table-sm table-bordered preview-table" id="billPreviewTable">
+                                    <thead class="table-light sticky-header">
+                                        <tr>
+                                            <th>序号</th>
+                                            <th>到港时间</th>
+                                            <th>提单号</th>
+                                            <th>柜号</th>
+                                            <th>报关费</th>
+                                            <th>查验服务费</th>
+                                            <th>代理换单费</th>
+                                            <th id="otherFee1Header">其他费用1</th>
+                                            <th id="otherFee2Header">其他费用2</th>
+                                            <th id="otherFee3Header" style="display: none;">其他费用3</th>
+                                            <th id="otherFee4Header" style="display: none;">其他费用4</th>
+                                            <th>合计</th>
+                                            <th>备注</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="billPreviewBody">
+                                        <!-- 账单预览数据将通过JavaScript动态填充 -->
+                                    </tbody>
+                                    <tfoot>
+                                        <tr class="table-primary">
+                                            <td colspan="4" class="text-end"><strong>总计：</strong></td>
+                                            <td id="totalCustomsFee">0.00</td>
+                                            <td id="totalInspectionFee">0.00</td>
+                                            <td id="totalDocumentFee">0.00</td>
+                                            <td id="totalOtherFee1">0.00</td>
+                                            <td id="totalOtherFee2">0.00</td>
+                                            <td id="totalOtherFee3" style="display: none;">0.00</td>
+                                            <td id="totalOtherFee4" style="display: none;">0.00</td>
+                                            <td id="grandTotal">0.00</td>
+                                            <td></td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                    <button type="button" class="btn btn-primary" id="saveGeneratedBill">保存账单</button>
+                    <button type="button" class="btn btn-success" id="exportBillPdf" disabled>
+                        <i class="fas fa-file-pdf"></i> 导出PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 账单详情模态框 -->
+    <div class="modal fade" id="billDetailModal" tabindex="-1" aria-labelledby="billDetailModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="billDetailModalLabel">账单详情</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mb-4">
+                        <div class="col-md-6">
+                            <p><strong>账单编号：</strong><span id="detailBillNo"></span></p>
+                            <p><strong>公司名称：</strong><span id="detailCompanyName"></span></p>
+                            <p><strong>账单日期：</strong><span id="detailBillDate"></span></p>
+                            <p><strong>账单状态：</strong><span id="detailBillStatus"></span></p>
+                        </div>
+                        <div class="col-md-6">
+                            <p><strong>总金额：</strong><span id="detailTotalAmount"></span></p>
+                            <p><strong>收款日期：</strong><span id="detailPaymentDate"></span></p>
+                            <p><strong>收款方：</strong><span id="detailPayee"></span></p>
+                            <p><strong>备注：</strong><span id="detailRemark"></span></p>
+                        </div>
+                    </div>
+                    
+                    <!-- 账单明细 -->
+                    <div class="table-responsive mb-4">
+                        <table class="table table-sm table-bordered">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>序号</th>
+                                    <th>到港时间</th>
+                                    <th>提单号</th>
+                                    <th>柜号</th>
+                                    <th>报关单号</th>
+                                    <th>报关费</th>
+                                    <th>查验服务费</th>
+                                    <th>代理换单费</th>
+                                    <th id="detailOtherFee1Header">其他费用1</th>
+                                    <th id="detailOtherFee2Header">其他费用2</th>
+                                    <th id="detailOtherFee3Header" style="display: none;">其他费用3</th>
+                                    <th id="detailOtherFee4Header" style="display: none;">其他费用4</th>
+                                    <th>合计</th>
+                                    <th>备注</th>
+                                </tr>
+                            </thead>
+                            <tbody id="billDetailItems">
+                                <!-- 账单明细将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    
+                    <!-- 附件管理 -->
+                    <div class="card">
+                        <div class="card-header d-flex justify-content-between align-items-center">
+                            <span>附件管理</span>
+                            <button class="btn btn-sm btn-outline-primary" id="uploadInvoiceBtn">
+                                <i class="fas fa-upload"></i> 上传发票
+                            </button>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-3" id="invoiceUploadSection" style="display: none;">
+                                <label for="invoiceUpload" class="form-label">选择发票文件</label>
+                                <input class="form-control" type="file" id="invoiceUpload" accept=".pdf,.jpg,.jpeg,.png">
+                                <div class="mt-2">
+                                    <button class="btn btn-primary btn-sm" id="confirmUpload">确认上传</button>
+                                    <button class="btn btn-secondary btn-sm" id="cancelUpload">取消</button>
+                                </div>
+                            </div>
+                            <div class="table-responsive">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th>文件名</th>
+                                            <th>文件类型</th>
+                                            <th>上传时间</th>
+                                            <th>操作</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="invoiceList">
+                                        <!-- 发票列表将通过JavaScript动态填充 -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
+                    <button type="button" class="btn btn-warning" id="confirmBill">确认账单</button>
+                    <button type="button" class="btn btn-success" id="exportDetailPdf">
+                        <i class="fas fa-file-pdf"></i> 导出PDF
+                    </button>
+                    <button type="button" class="btn btn-outline-success" id="exportDetailExcel">
+                        <i class="fas fa-file-excel"></i> 导出Excel
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ========== 引入JavaScript库 ========== -->
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.2/dist/av-min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/zh.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+
+    <!-- ========== 账单管理JavaScript代码 ========== -->
+    <script>
+        // 账单管理功能模块
+        let billsData = [];
+        let filteredBillsData = [];
+        let customsDataForBilling = [];
+        let selectedItemsForBill = [];
+        let billsItemsPerPage = 10;
+        let billsCurrentPageIndex = 1;
+        let billsTotalPages = 1;
+        let customFees = [];
+        let currentCustomFeeId = 3; // 从3开始，因为1和2已经被其他费用1和2占用
+        
+        // 搜索相关变量
+        let searchBillQuery = '';
+        let searchBillType = 'containerNo';
+        
+        // 用户管理相关变量
+        let currentUser = null;
+        let isLoggedIn = false;
+
+        // LeanCloud初始化 - 使用 REST API 服务器
+        AV.init({
+            appId: 'qWTZ0xzNWk9B3bhk3vXGbfPl-gzGzoHsz',
+            appKey: 'n1MnTEgdQGWk2jouFA55NF1n',
+            serverURL: 'https://api.rtcus.cn'
+        });
+
+        // 页面加载完成后执行
+        document.addEventListener('DOMContentLoaded', function() {
+            checkLoginStatus();
+        });
+
+        // 检查登录状态
+        async function checkLoginStatus() {
+            try {
+                currentUser = AV.User.current();
+                
+                if (currentUser) {
+                    // 验证token是否有效
+                    await currentUser.isAuthenticated();
+                    isLoggedIn = true;
+                    showMainContent();
+                } else {
+                    showLoginPage();
+                }
+            } catch (error) {
+                console.log('Token无效或已过期，需要重新登录');
+                showLoginPage();
+            }
+        }
+
+        // 显示登录页面
+        function showLoginPage() {
+            document.getElementById('loginContainer').style.display = 'flex';
+            document.body.style.display = 'none';
+            
+            // 自动填充上次登录的用户名
+            const lastUsername = localStorage.getItem('lastUsername');
+            if (lastUsername) {
+                document.getElementById('loginUsername').value = lastUsername;
+            }
+            
+            // 绑定登录表单事件
+            document.getElementById('loginForm').addEventListener('submit', async function(e) {
+                e.preventDefault();
+                await login();
+            });
+            
+            // 绑定记住我复选框
+            const rememberMe = document.getElementById('rememberMe');
+            const savedRemember = localStorage.getItem('rememberMe') === 'true';
+            rememberMe.checked = savedRemember;
+            rememberMe.addEventListener('change', function() {
+                localStorage.setItem('rememberMe', this.checked);
+            });
+        }
+
+        // 显示主页面
+        function showMainContent() {
+            document.getElementById('loginContainer').style.display = 'none';
+            document.body.style.display = 'block';
+            document.getElementById('mainContent').style.display = 'block';
+            
+            // 创建用户信息栏
+            createUserInfoBar();
+            
+            // 初始化功能
+            initDatePickers();
+            bindEvents();
+            loadListData();
+        }
+
+        // 创建用户信息栏
+        function createUserInfoBar() {
+            // 移除现有的用户信息栏
+            const existingUserInfo = document.querySelector('.user-info');
+            if (existingUserInfo) {
+                existingUserInfo.remove();
+            }
+            
+            if (!currentUser) return;
+            
+            const userInfoBar = document.createElement('div');
+            userInfoBar.className = 'user-info';
+            userInfoBar.innerHTML = `
+                <span class="username">${currentUser.get('username') || currentUser.get('email') || '用户'}</span>
+                <button class="btn btn-sm btn-outline-danger logout-btn">
+                    <i class="fas fa-sign-out-alt"></i> 退出登录
+                </button>
+            `;
+            
+            document.body.appendChild(userInfoBar);
+            
+            // 绑定退出按钮事件
+            userInfoBar.querySelector('.logout-btn').addEventListener('click', logout);
+        }
+
+        // 登录函数 - 使用 LeanCloud 内建账户
+        async function login() {
+            const username = document.getElementById('loginUsername').value.trim();
+            const password = document.getElementById('loginPassword').value;
+            const rememberMe = document.getElementById('rememberMe').checked;
+            const loginBtn = document.getElementById('loginBtn');
+            const errorElement = document.getElementById('loginError');
+            
+            // 清除之前的错误信息
+            errorElement.style.display = 'none';
+            errorElement.textContent = '';
+            
+            if (!username || !password) {
+                showLoginError('请输入用户名和密码');
+                return;
+            }
+            
+            // 禁用登录按钮，显示加载状态
+            loginBtn.disabled = true;
+            const originalText = loginBtn.innerHTML;
+            loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+            
+            try {
+                // LeanCloud 登录
+                currentUser = await AV.User.logIn(username, password);
+                isLoggedIn = true;
+                
+                // 保存登录信息
+                localStorage.setItem('lastUsername', username);
+                
+                if (rememberMe) {
+                    // 设置session token的有效期
+                    currentUser.set('sessionToken', currentUser.getSessionToken());
+                }
+                
+                // 显示主页面
+                showMainContent();
+                
+            } catch (error) {
+                console.error('登录失败:', error);
+                let errorMessage = '登录失败';
+                
+                if (error.code === 211) {
+                    errorMessage = '用户不存在';
+                } else if (error.code === 210) {
+                    errorMessage = '用户名或密码错误';
+                } else if (error.code === 219) {
+                    errorMessage = '登录失败次数超过限制，请稍后再试';
+                }
+                
+                showLoginError(errorMessage);
+                document.getElementById('loginPassword').value = '';
+                document.getElementById('loginPassword').focus();
+            } finally {
+                // 恢复登录按钮状态
+                loginBtn.disabled = false;
+                loginBtn.innerHTML = originalText;
+            }
+        }
+
+        // 显示登录错误
+        function showLoginError(message) {
+            const errorElement = document.getElementById('loginError');
+            errorElement.textContent = message;
+            errorElement.style.display = 'block';
+            
+            // 3秒后自动隐藏错误信息
+            setTimeout(() => {
+                errorElement.style.display = 'none';
+            }, 3000);
+        }
+
+        // 退出登录
+        async function logout() {
+            if (!confirm('确定要退出登录吗？')) {
+                return;
+            }
+            
+            try {
+                await AV.User.logOut();
+                currentUser = null;
+                isLoggedIn = false;
+                
+                // 移除用户信息栏
+                const userInfoBar = document.querySelector('.user-info');
+                if (userInfoBar) {
+                    userInfoBar.remove();
+                }
+                
+                // 清空数据
+                billsData = [];
+                filteredBillsData = [];
+                
+                // 显示登录页面
+                showLoginPage();
+                
+                // 清空主页面内容
+                const tbody = document.querySelector('#billsTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = '';
+                }
+                
+                // 重置统计信息
+                updateStatistics();
+                
+            } catch (error) {
+                console.error('退出登录失败:', error);
+                alert('退出登录失败');
+            }
+        }
+
+        // 检查是否登录
+        function checkLogin() {
+            if (!isLoggedIn) {
+                alert('请先登录系统');
+                logout(); // 自动跳转到登录页面
+                return false;
+            }
+            return true;
+        }
+
+        // 初始化日期选择器
+        function initDatePickers() {
+            const billDatePicker = flatpickr('#billDateRange', {
+                mode: 'range',
+                locale: 'zh',
+                dateFormat: 'Y-m-d',
+                allowInput: true
+            });
+            
+            window.datePickers = {
+                billDateRange: billDatePicker
+            };
+        }
+
+        // 绑定所有事件
+        function bindEvents() {
+            // 查询按钮
+            document.getElementById('searchBills').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                loadListData();
+            });
+            
+            // 清空按钮
+            document.getElementById('clearBills').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                clearBills();
+            });
+            
+            // 每页显示条数变化
+            document.getElementById('billsPageSizeSelect').addEventListener('change', function() {
+                billsItemsPerPage = parseInt(this.value);
+                billsCurrentPageIndex = 1;
+                updateBillsPagination();
+                renderBillsTable();
+            });
+            
+            // 生成账单按钮
+            document.getElementById('generateBill').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                showGenerateBillModal();
+            });
+            
+            // 查询报关数据按钮
+            document.getElementById('searchCustomsData').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                searchCustomsData();
+            });
+            
+            // 应用到所有选中项按钮
+            document.getElementById('applyAllFees').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                applyAllFees();
+            });
+            
+            // 预览账单按钮 - 修复：添加 preventDefault
+            document.getElementById('previewBill').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!checkLogin()) return;
+                previewBill();
+            });
+            
+            // 保存生成账单按钮
+            document.getElementById('saveGeneratedBill').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                saveGeneratedBill();
+            });
+            
+            // 导出Excel按钮
+            document.getElementById('exportBillExcel').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                exportBillExcel();
+            });
+            
+            // 导出PDF按钮
+            document.getElementById('exportBillPdf').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                exportBillPdf();
+            });
+            
+            // 添加自定义费用按钮
+            document.getElementById('addCustomFee').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                addCustomFee();
+            });
+            
+            // 确认账单按钮
+            document.getElementById('confirmBill').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                confirmBill();
+            });
+            
+            // 导出详情PDF按钮
+            document.getElementById('exportDetailPdf').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                exportDetailPdf();
+            });
+            
+            // 导出详情Excel按钮
+            document.getElementById('exportDetailExcel').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                const billId = document.getElementById('billDetailModal').getAttribute('data-current-id');
+                const item = billsData.find(item => item.id === billId);
+                if (item) {
+                    exportDetailExcel(item);
+                }
+            });
+            
+            // 上传发票按钮
+            document.getElementById('uploadInvoiceBtn').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                showUploadInvoice();
+            });
+            
+            // 确认上传按钮
+            document.getElementById('confirmUpload').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                confirmUploadInvoice();
+            });
+            
+            // 取消上传按钮
+            document.getElementById('cancelUpload').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                cancelUpload();
+            });
+            
+            // 账单预览搜索按钮
+            document.getElementById('billPreviewSearchBtn').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                searchBillPreview();
+            });
+            
+            // 账单预览搜索输入框回车事件
+            document.getElementById('billPreviewSearch').addEventListener('keypress', function(e) {
+                if (e.key === 'Enter') {
+                    if (!checkLogin()) return;
+                    searchBillPreview();
+                }
+            });
+            
+            // 绑定费用输入变化事件
+            document.querySelectorAll('.fee-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    if (selectedItemsForBill.length > 0) {
+                        previewBill();
+                    }
+                });
+            });
+            
+            // 绑定费用名称变化事件
+            document.getElementById('otherFee1Name').addEventListener('change', function() {
+                if (selectedItemsForBill.length > 0) {
+                    previewBill();
+                }
+            });
+            
+            document.getElementById('otherFee2Name').addEventListener('change', function() {
+                if (selectedItemsForBill.length > 0) {
+                    previewBill();
+                }
+            });
+        }
+
+        // 加载账单数据
+        async function loadListData() {
+            if (!checkLogin()) return;
+            
+            try {
+                const tbody = document.querySelector('#billsTable tbody');
+                if (!tbody) {
+                    console.warn('账单管理表格元素尚未加载');
+                    return;
+                }
+                
+                tbody.innerHTML = '<tr><td colspan="10" class="loading">正在加载数据...</td></tr>';
+                
+                // 检查表是否存在
+                const tableExists = await checkTableExists('Bills');
+                if (!tableExists) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="no-data">账单表不存在，请先在LeanCloud后台创建Bills表</td></tr>';
+                    updateStatistics();
+                    return;
+                }
+                
+                const query = new AV.Query('Bills');
+                query.descending('billDate');
+                const results = await query.find();
+                
+                billsData = results.map(item => {
+                    const data = item.toJSON();
+                    return {
+                        id: data.objectId,
+                        billNo: data.billNo || generateBillNo(),
+                        billDate: data.billDate || '',
+                        companyName: data.companyName || '',
+                        containerNo: data.containerNo || '',
+                        customsNo: data.customsNo || '',
+                        billNoSearch: data.billNoSearch || '',
+                        domesticConsignee: data.domesticConsignee || '',
+                        totalAmount: data.totalAmount || 0,
+                        currency: data.currency || 'CNY',
+                        billStatus: data.billStatus || '未确认',
+                        paymentDate: data.paymentDate || '',
+                        payee: data.payee || '',
+                        remark: data.remark || '',
+                        billItems: data.billItems || [],
+                        attachments: data.attachments || [],
+                        customFees: data.customFees || [],
+                        leanCloudObject: item
+                    };
+                });
+                
+                applyBillsFilters();
+                billsCurrentPageIndex = 1;
+                updateBillsPagination();
+                renderBillsTable();
+                updateStatistics();
+                
+            } catch (error) {
+                console.error('加载账单数据失败:', error);
+                const tbody = document.querySelector('#billsTable tbody');
+                if (tbody) {
+                    tbody.innerHTML = '<tr><td colspan="10" class="no-data">数据加载失败，请刷新页面重试</td></tr>';
+                }
+                updateStatistics();
+            }
+        }
+
+        // 生成账单编号
+        function generateBillNo() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+            return `BILL${year}${month}${day}${random}`;
+        }
+
+        // 更新统计信息
+        function updateStatistics() {
+            const totalAmount = filteredBillsData.reduce((sum, bill) => sum + (parseFloat(bill.totalAmount) || 0), 0);
+            const unconfirmedAmount = filteredBillsData
+                .filter(bill => bill.billStatus === '未确认')
+                .reduce((sum, bill) => sum + (parseFloat(bill.totalAmount) || 0), 0);
+            const confirmedAmount = filteredBillsData
+                .filter(bill => bill.billStatus === '已确认')
+                .reduce((sum, bill) => sum + (parseFloat(bill.totalAmount) || 0), 0);
+            
+            document.getElementById('totalAmount').textContent = `¥${totalAmount.toFixed(2)}`;
+            document.getElementById('unconfirmedAmount').textContent = `¥${unconfirmedAmount.toFixed(2)}`;
+            document.getElementById('confirmedAmount').textContent = `¥${confirmedAmount.toFixed(2)}`;
+            document.getElementById('billCount').textContent = filteredBillsData.length;
+        }
+
+        // 应用账单筛选条件
+        function applyBillsFilters() {
+            const billDateRange = document.getElementById('billDateRange').value;
+            const billStatus = document.getElementById('billStatusFilter').value;
+            const companyName = document.getElementById('companyNameFilter').value;
+            
+            filteredBillsData = billsData.filter(item => {
+                let match = true;
+                
+                if (billStatus && billStatus.trim() !== '') {
+                    if (item.billStatus !== billStatus) {
+                        match = false;
+                    }
+                }
+                
+                if (companyName && companyName.trim() !== '') {
+                    if (!item.companyName || !item.companyName.includes(companyName)) {
+                        match = false;
+                    }
+                }
+                
+                if (billDateRange && billDateRange.trim() !== '') {
+                    const separator = billDateRange.includes('至') ? '至' : 'to';
+                    const dates = billDateRange.split(separator).map(date => date.trim());
+                    
+                    if (dates.length === 2) {
+                        const startDateStr = dates[0];
+                        const endDateStr = dates[1];
+                        
+                        if (!item.billDate || item.billDate.trim() === '') {
+                            match = false;
+                        } else {
+                            const itemDate = new Date(item.billDate);
+                            const startDate = new Date(startDateStr);
+                            const endDate = new Date(endDateStr);
+                            
+                            if (isNaN(itemDate.getTime()) || isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
+                                match = false;
+                            } else {
+                                const itemDateOnly = new Date(itemDate.getFullYear(), itemDate.getMonth(), itemDate.getDate());
+                                const startDateOnly = new Date(startDate.getFullYear(), startDate.getMonth(), startDate.getDate());
+                                const endDateOnly = new Date(endDate.getFullYear(), endDate.getMonth(), endDate.getDate());
+                                
+                                if (itemDateOnly < startDateOnly || itemDateOnly > endDateOnly) {
+                                    match = false;
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                return match;
+            });
+        }
+
+        // 渲染账单表格
+        function renderBillsTable() {
+            const tbody = document.querySelector('#billsTable tbody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (filteredBillsData.length === 0) {
+                const row = document.createElement('tr');
+                row.innerHTML = `<td colspan="10" class="text-center no-data">没有找到匹配的数据</td>`;
+                tbody.appendChild(row);
+                return;
+            }
+            
+            const startIndex = (billsCurrentPageIndex - 1) * billsItemsPerPage;
+            const endIndex = Math.min(startIndex + billsItemsPerPage, filteredBillsData.length);
+            const currentPageData = filteredBillsData.slice(startIndex, endIndex);
+            
+            currentPageData.forEach((item, index) => {
+                const row = document.createElement('tr');
+                const globalIndex = startIndex + index;
+                
+                // 根据状态设置行样式
+                let rowClass = '';
+                if (item.billStatus === '未确认') {
+                    rowClass = 'table-warning';
+                } else if (item.billStatus === '已确认') {
+                    rowClass = 'table-info';
+                } else if (item.billStatus === '已收款') {
+                    rowClass = 'table-success';
+                }
+                
+                row.innerHTML = `
+                    <td>${globalIndex + 1}</td>
+                    <td>${item.billNo}</td>
+                    <td>${item.billDate}</td>
+                    <td>${item.companyName}</td>
+                    <td class="fw-bold">${formatCurrency(item.totalAmount || 0, item.currency)}</td>
+                    <td>${item.currency}</td>
+                    <td>
+                        <span class="badge ${getStatusBadgeClass(item.billStatus)}">${item.billStatus}</span>
+                    </td>
+                    <td>${item.paymentDate || '-'}</td>
+                    <td>${item.remark || '-'}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary view-bill" data-id="${item.id}">
+                            <i class="fas fa-eye"></i> 查看
+                        </button>
+                        ${item.billStatus !== '已收款' ? `
+                        <button class="btn btn-sm btn-outline-danger delete-bill" data-id="${item.id}">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                        ` : ''}
+                    </td>
+                `;
+                
+                if (rowClass) {
+                    row.className = rowClass;
+                }
+                
+                tbody.appendChild(row);
+            });
+            
+            bindBillsEvents();
+            updateBillsPaginationInfo();
+        }
+
+        // 格式化货币显示
+        function formatCurrency(amount, currency) {
+            const numAmount = parseFloat(amount) || 0;
+            const symbol = getCurrencySymbol(currency);
+            return `${symbol}${numAmount.toFixed(2)}`;
+        }
+
+        // 获取货币符号
+        function getCurrencySymbol(currency) {
+            const symbols = {
+                'CNY': '¥',
+                'USD': '$',
+                'EUR': '€',
+                'JPY': '¥'
+            };
+            return symbols[currency] || currency;
+        }
+
+        // 获取状态标签样式
+        function getStatusBadgeClass(status) {
+            const classes = {
+                '未确认': 'bg-warning',
+                '已确认': 'bg-info',
+                '已收款': 'bg-success'
+            };
+            return classes[status] || 'bg-secondary';
+        }
+
+        // 绑定账单事件
+        function bindBillsEvents() {
+            // 查看账单详情
+            document.querySelectorAll('.view-bill').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!checkLogin()) return;
+                    const id = this.getAttribute('data-id');
+                    showBillDetail(id);
+                });
+            });
+            
+            // 删除账单
+            document.querySelectorAll('.delete-bill').forEach(btn => {
+                btn.addEventListener('click', async function() {
+                    if (!checkLogin()) return;
+                    const id = this.getAttribute('data-id');
+                    await deleteBill(id);
+                });
+            });
+        }
+
+        // 显示生成账单模态框
+        function showGenerateBillModal() {
+            // 清空表单
+            const form = document.querySelector('#generateBillModal form');
+            if (form) form.reset();
+            
+            // 初始化年份和月份选择
+            initYearMonthSelectors();
+            
+            // 清空选择的数据
+            selectedItemsForBill = [];
+            customsDataForBilling = [];
+            customFees = [];
+            currentCustomFeeId = 3;
+            
+            // 清空搜索条件
+            searchBillQuery = '';
+            searchBillType = 'containerNo';
+            
+            // 清空表格
+            document.getElementById('customsDataBody').innerHTML = '';
+            document.getElementById('billPreviewBody').innerHTML = '';
+            
+            // 重置费用输入
+            document.getElementById('customsFee').value = '0';
+            document.getElementById('inspectionFee').value = '0';
+            document.getElementById('documentFee').value = '0';
+            document.getElementById('otherFee1').value = '0';
+            document.getElementById('otherFee2').value = '0';
+            document.getElementById('otherFee1Name').value = '其他费用1';
+            document.getElementById('otherFee2Name').value = '其他费用2';
+            
+            // 清空自定义费用区域
+            document.getElementById('customFeesContainer').innerHTML = '';
+            
+            // 更新其他费用表头
+            document.getElementById('otherFee1Header').textContent = '其他费用1';
+            document.getElementById('otherFee2Header').textContent = '其他费用2';
+            document.getElementById('otherFee3Header').style.display = 'none';
+            document.getElementById('otherFee4Header').style.display = 'none';
+            document.getElementById('totalOtherFee3').style.display = 'none';
+            document.getElementById('totalOtherFee4').style.display = 'none';
+            
+            // 重置总计
+            document.getElementById('totalCustomsFee').textContent = '0.00';
+            document.getElementById('totalInspectionFee').textContent = '0.00';
+            document.getElementById('totalDocumentFee').textContent = '0.00';
+            document.getElementById('totalOtherFee1').textContent = '0.00';
+            document.getElementById('totalOtherFee2').textContent = '0.00';
+            document.getElementById('grandTotal').textContent = '0.00';
+            
+            // 重新绑定预览按钮事件
+            document.getElementById('previewBill').addEventListener('click', function(e) {
+                e.preventDefault();
+                if (!checkLogin()) return;
+                previewBill();
+            });
+            
+            const modal = new bootstrap.Modal(document.getElementById('generateBillModal'));
+            modal.show();
+        }
+
+        // 初始化年份和月份选择器
+        function initYearMonthSelectors() {
+            const yearSelect = document.getElementById('billYear');
+            const monthSelect = document.getElementById('billMonth');
+            
+            // 清空现有选项
+            yearSelect.innerHTML = '<option value="">选择年份</option>';
+            monthSelect.innerHTML = '<option value="">选择月份</option>';
+            
+            // 添加年份选项（当前年份及前后5年）
+            const currentYear = new Date().getFullYear();
+            for (let year = currentYear - 5; year <= currentYear + 1; year++) {
+                const option = document.createElement('option');
+                option.value = year;
+                option.textContent = year + '年';
+                if (year === currentYear) {
+                    option.selected = true;
+                }
+                yearSelect.appendChild(option);
+            }
+            
+            // 添加月份选项
+            for (let month = 1; month <= 12; month++) {
+                const option = document.createElement('option');
+                option.value = month;
+                option.textContent = month + '月';
+                if (month === new Date().getMonth() + 1) {
+                    option.selected = true;
+                }
+                monthSelect.appendChild(option);
+            }
+        }
+
+        // 查询报关数据
+        async function searchCustomsData() {
+            if (!checkLogin()) return;
+            
+            const companyName = document.getElementById('companyName').value;
+            const year = document.getElementById('billYear').value;
+            const month = document.getElementById('billMonth').value;
+            
+            if (!companyName || !year || !month) {
+                alert('请填写公司名称、年份和月份');
+                return;
+            }
+            
+            try {
+                // 查询报关数据 - 按申报日期筛选
+                const query = new AV.Query('Tracking');
+                
+                // 添加查询条件：按申报日期筛选
+                const startDate = new Date(year, month - 1, 1);
+                const endDate = new Date(year, month, 0);
+                
+                query.greaterThanOrEqualTo('declareDate', startDate.toISOString().split('T')[0]);
+                query.lessThanOrEqualTo('declareDate', endDate.toISOString().split('T')[0]);
+                
+                query.ascending('declareDate');
+                const results = await query.find();
+                
+                customsDataForBilling = results.map(item => {
+                    const data = item.toJSON();
+                    return {
+                        id: data.objectId,
+                        arrivalDate: data.arrivalDate || '',
+                        declareDate: data.declareDate || '',
+                        billNo: data.billNo || '',
+                        containerNo: data.containerNo || '',
+                        customsNo: data.customsNo || '',
+                        domesticConsignee: data.domesticConsignee || '',
+                        consumptionUnit: data.consumptionUnit || '',
+                        country: data.country || '',
+                        productName: data.productName || '',
+                        selected: false,
+                        leanCloudObject: item
+                    };
+                });
+                
+                // 过滤掉已经在账单中的数据
+                await filterUsedCustomsData();
+                
+                // 应用查询条件
+                applyCustomsDataFilters();
+                
+                // 渲染报关数据表格
+                renderCustomsDataTable();
+                
+            } catch (error) {
+                console.error('查询报关数据失败:', error);
+                alert('查询报关数据失败: ' + error.message);
+            }
+        }
+
+        // 过滤掉已经在账单中使用的报关数据
+        async function filterUsedCustomsData() {
+            try {
+                // 查询已生成账单的数据
+                const billQuery = new AV.Query('Bills');
+                const billResults = await billQuery.find();
+                
+                const usedIds = new Set();
+                billResults.forEach(bill => {
+                    const billData = bill.toJSON();
+                    if (billData.billItems) {
+                        billData.billItems.forEach(item => {
+                            if (item.customsDataId) {
+                                usedIds.add(item.customsDataId);
+                            }
+                        });
+                    }
+                });
+                
+                // 过滤掉已使用的数据
+                customsDataForBilling = customsDataForBilling.filter(item => !usedIds.has(item.id));
+                
+            } catch (error) {
+                console.error('过滤已使用数据失败:', error);
+            }
+        }
+
+        // 应用报关数据筛选条件
+        function applyCustomsDataFilters() {
+            const containerNo = document.getElementById('searchContainerNo').value;
+            const billNo = document.getElementById('searchBillNo').value;
+            const customsNo = document.getElementById('searchCustomsNo').value;
+            
+            if (containerNo || billNo || customsNo) {
+                customsDataForBilling = customsDataForBilling.filter(item => {
+                    let match = true;
+                    
+                    if (containerNo && containerNo.trim() !== '') {
+                        if (!item.containerNo || !item.containerNo.includes(containerNo)) {
+                            match = false;
+                        }
+                    }
+                    
+                    if (billNo && billNo.trim() !== '') {
+                        if (!item.billNo || !item.billNo.includes(billNo)) {
+                            match = false;
+                        }
+                    }
+                    
+                    if (customsNo && customsNo.trim() !== '') {
+                        if (!item.customsNo || !item.customsNo.includes(customsNo)) {
+                            match = false;
+                        }
+                    }
+                    
+                    return match;
+                });
+            }
+        }
+
+        // 渲染报关数据表格
+        function renderCustomsDataTable() {
+            const tbody = document.getElementById('customsDataBody');
+            if (!tbody) return;
+            
+            tbody.innerHTML = '';
+            
+            if (customsDataForBilling.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" class="text-center">没有找到报关数据</td></tr>';
+                return;
+            }
+            
+            customsDataForBilling.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>
+                        <input type="checkbox" class="item-checkbox" data-id="${item.id}" ${item.selected ? 'checked' : ''}>
+                    </td>
+                    <td>${index + 1}</td>
+                    <td>${item.arrivalDate}</td>
+                    <td>${item.declareDate}</td>
+                    <td>${item.billNo}</td>
+                    <td>${item.containerNo}</td>
+                    <td>${item.customsNo}</td>
+                    <td>${item.domesticConsignee}</td>
+                    <td>${item.consumptionUnit}</td>
+                    <td>${item.country}</td>
+                    <td>${item.productName}</td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // 绑定复选框事件
+            bindCustomsDataCheckboxes();
+        }
+
+        // 绑定报关数据复选框事件
+        function bindCustomsDataCheckboxes() {
+            document.querySelectorAll('.item-checkbox').forEach(checkbox => {
+                checkbox.addEventListener('change', function() {
+                    const id = this.getAttribute('data-id');
+                    const item = customsDataForBilling.find(item => item.id === id);
+                    if (item) {
+                        item.selected = this.checked;
+                    }
+                    
+                    // 更新全选状态
+                    updateSelectAllCheckbox();
+                    
+                    // 更新已选择项目
+                    selectedItemsForBill = customsDataForBilling.filter(item => item.selected);
+                });
+            });
+            
+            // 全选复选框
+            const selectAllCheckbox = document.getElementById('selectAllItems');
+            if (selectAllCheckbox) {
+                selectAllCheckbox.addEventListener('change', function() {
+                    const checkboxes = document.querySelectorAll('.item-checkbox');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.checked = this.checked;
+                        const id = checkbox.getAttribute('data-id');
+                        const item = customsDataForBilling.find(item => item.id === id);
+                        if (item) {
+                            item.selected = this.checked;
+                        }
+                    });
+                    
+                    selectedItemsForBill = this.checked ? [...customsDataForBilling] : [];
+                });
+            }
+        }
+
+        // 更新全选复选框状态
+        function updateSelectAllCheckbox() {
+            const selectAllCheckbox = document.getElementById('selectAllItems');
+            if (!selectAllCheckbox) return;
+            
+            const checkboxes = document.querySelectorAll('.item-checkbox');
+            const checkedCount = document.querySelectorAll('.item-checkbox:checked').length;
+            
+            selectAllCheckbox.checked = checkedCount === checkboxes.length && checkboxes.length > 0;
+            selectAllCheckbox.indeterminate = checkedCount > 0 && checkedCount < checkboxes.length;
+        }
+
+        // 添加自定义费用
+        function addCustomFee() {
+            const customFeesContainer = document.getElementById('customFeesContainer');
+            
+            // 最多支持4个其他费用
+            if (currentCustomFeeId > 4) {
+                alert('最多只能添加4个其他费用');
+                return;
+            }
+            
+            const feeId = currentCustomFeeId;
+            const feeHtml = `
+                <div class="custom-fee-item" id="customFee${feeId}">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <label class="form-label">其他费用${feeId}</label>
+                            <div class="input-group">
+                                <input type="text" class="form-control" id="otherFee${feeId}Name" placeholder="费用名称" value="其他费用${feeId}">
+                                <input type="number" class="form-control fee-input" id="otherFee${feeId}" step="0.01" min="0" value="0">
+                                <button class="btn btn-outline-danger" type="button" onclick="removeCustomFee(${feeId})">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            customFeesContainer.insertAdjacentHTML('beforeend', feeHtml);
+            
+            // 添加到自定义费用数组
+            customFees.push({
+                id: feeId,
+                name: `其他费用${feeId}`,
+                value: 0
+            });
+            
+            // 显示对应的表头
+            document.getElementById(`otherFee${feeId}Header`).style.display = 'table-cell';
+            document.getElementById(`totalOtherFee${feeId}`).style.display = 'table-cell';
+            
+            currentCustomFeeId++;
+        }
+
+        // 移除自定义费用
+        function removeCustomFee(feeId) {
+            const feeElement = document.getElementById(`customFee${feeId}`);
+            if (feeElement) {
+                feeElement.remove();
+                
+                // 从自定义费用数组中移除
+                customFees = customFees.filter(fee => fee.id !== feeId);
+                
+                // 隐藏对应的表头
+                document.getElementById(`otherFee${feeId}Header`).style.display = 'none';
+                document.getElementById(`totalOtherFee${feeId}`).style.display = 'none';
+            }
+        }
+
+        // 应用费用到所有选中项 - 增强版本
+        function applyAllFees() {
+            if (selectedItemsForBill.length === 0) {
+                alert('请先选择报关数据');
+                return;
+            }
+            
+            // 获取费用设置
+            const customsFee = parseFloat(document.getElementById('customsFee').value) || 0;
+            const inspectionFee = parseFloat(document.getElementById('inspectionFee').value) || 0;
+            const documentFee = parseFloat(document.getElementById('documentFee').value) || 0;
+            const otherFee1 = parseFloat(document.getElementById('otherFee1').value) || 0;
+            const otherFee2 = parseFloat(document.getElementById('otherFee2').value) || 0;
+            
+            // 获取自定义费用
+            const customFeeValues = {};
+            customFees.forEach(fee => {
+                const feeValue = parseFloat(document.getElementById(`otherFee${fee.id}`).value) || 0;
+                customFeeValues[fee.id] = feeValue;
+            });
+            
+            // 应用到所有选中项
+            selectedItemsForBill.forEach(item => {
+                // 设置基础费用
+                item.customsFee = customsFee;
+                item.inspectionFee = inspectionFee;
+                item.documentFee = documentFee;
+                item.otherFee1 = otherFee1;
+                item.otherFee2 = otherFee2;
+                
+                // 设置自定义费用
+                customFees.forEach(fee => {
+                    item[`otherFee${fee.id}`] = customFeeValues[fee.id] || 0;
+                });
+            });
+            
+            // 触发预览更新
+            previewBill();
+            
+            alert(`已成功将费用设置应用到 ${selectedItemsForBill.length} 个选中项`);
+        }
+
+        // 搜索账单预览数据
+        function searchBillPreview() {
+            const query = document.getElementById('billPreviewSearch').value.trim();
+            const searchType = document.getElementById('billPreviewSearchType').value;
+            
+            searchBillQuery = query;
+            searchBillType = searchType;
+            
+            if (!query) {
+                // 清空搜索，显示所有数据
+                renderBillPreviewTable();
+                return;
+            }
+            
+            // 筛选数据
+            const filteredItems = selectedItemsForBill.filter(item => {
+                const searchField = item[searchType] || '';
+                return searchField.toString().toLowerCase().includes(query.toLowerCase());
+            });
+            
+            if (filteredItems.length === 0) {
+                alert('未找到匹配的数据');
+                return;
+            }
+            
+            // 高亮显示匹配的数据
+            highlightSearchResults(filteredItems);
+        }
+
+        // 高亮显示搜索结果
+        function highlightSearchResults(filteredItems) {
+            const tbody = document.getElementById('billPreviewBody');
+            const rows = tbody.querySelectorAll('tr');
+            
+            // 先移除所有高亮
+            rows.forEach(row => {
+                row.classList.remove('table-warning');
+            });
+            
+            // 高亮匹配的行
+            filteredItems.forEach(item => {
+                const row = tbody.querySelector(`tr[data-id="${item.id}"]`);
+                if (row) {
+                    row.classList.add('table-warning');
+                    
+                    // 滚动到第一个匹配项
+                    row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+            
+            alert(`找到 ${filteredItems.length} 条匹配数据`);
+        }
+
+        // 预览账单
+        function previewBill() {
+            if (selectedItemsForBill.length === 0) {
+                alert('请选择要生成账单的报关数据');
+                return;
+            }
+            
+            // 确保所有选中项都有备注字段
+            selectedItemsForBill.forEach(item => {
+                if (!item.hasOwnProperty('remark')) {
+                    item.remark = ''; // 设置默认空备注
+                }
+            });
+            
+            renderBillPreviewTable();
+        }
+
+        // 渲染账单预览表格 - 增强版本
+        function renderBillPreviewTable() {
+            if (selectedItemsForBill.length === 0) {
+                document.getElementById('billPreviewBody').innerHTML = '<tr><td colspan="15" class="text-center">请先选择报关数据</td></tr>';
+                return;
+            }
+            
+            // 获取费用设置
+            const customsFee = parseFloat(document.getElementById('customsFee').value) || 0;
+            const inspectionFee = parseFloat(document.getElementById('inspectionFee').value) || 0;
+            const documentFee = parseFloat(document.getElementById('documentFee').value) || 0;
+            const otherFee1 = parseFloat(document.getElementById('otherFee1').value) || 0;
+            const otherFee2 = parseFloat(document.getElementById('otherFee2').value) || 0;
+            
+            // 获取其他费用名称
+            const otherFee1Name = document.getElementById('otherFee1Name').value || '其他费用1';
+            const otherFee2Name = document.getElementById('otherFee2Name').value || '其他费用2';
+            
+            // 获取自定义费用
+            const customFeeValues = {};
+            customFees.forEach(fee => {
+                const feeValue = parseFloat(document.getElementById(`otherFee${fee.id}`).value) || 0;
+                const feeName = document.getElementById(`otherFee${fee.id}Name`).value || `其他费用${fee.id}`;
+                customFeeValues[fee.id] = {
+                    name: feeName,
+                    value: feeValue
+                };
+            });
+            
+            // 更新表头
+            document.getElementById('otherFee1Header').textContent = otherFee1Name;
+            document.getElementById('otherFee2Header').textContent = otherFee2Name;
+            
+            customFees.forEach(fee => {
+                document.getElementById(`otherFee${fee.id}Header`).textContent = customFeeValues[fee.id].name;
+            });
+            
+            // 渲染账单预览
+            const tbody = document.getElementById('billPreviewBody');
+            tbody.innerHTML = '';
+            
+            let totalCustomsFee = 0;
+            let totalInspectionFee = 0;
+            let totalDocumentFee = 0;
+            let totalOtherFee1 = 0;
+            let totalOtherFee2 = 0;
+            let totalOtherFee3 = 0;
+            let totalOtherFee4 = 0;
+            let grandTotal = 0;
+            
+            selectedItemsForBill.forEach((item, index) => {
+                const row = document.createElement('tr');
+                row.setAttribute('data-id', item.id);
+                
+                // 使用预设费用或默认费用
+                const itemCustomsFee = item.customsFee !== undefined ? item.customsFee : customsFee;
+                const itemInspectionFee = item.inspectionFee !== undefined ? item.inspectionFee : inspectionFee;
+                const itemDocumentFee = item.documentFee !== undefined ? item.documentFee : documentFee;
+                const itemOtherFee1 = item.otherFee1 !== undefined ? item.otherFee1 : otherFee1;
+                const itemOtherFee2 = item.otherFee2 !== undefined ? item.otherFee2 : otherFee2;
+                
+                // 计算自定义费用
+                const itemCustomFees = {};
+                let itemCustomFeesTotal = 0;
+                customFees.forEach(fee => {
+                    itemCustomFees[fee.id] = item[`otherFee${fee.id}`] !== undefined ? item[`otherFee${fee.id}`] : customFeeValues[fee.id].value;
+                    itemCustomFeesTotal += itemCustomFees[fee.id];
+                });
+                
+                const itemTotal = itemCustomsFee + itemInspectionFee + itemDocumentFee + itemOtherFee1 + itemOtherFee2 + itemCustomFeesTotal;
+                
+                // 累加总计
+                totalCustomsFee += itemCustomsFee;
+                totalInspectionFee += itemInspectionFee;
+                totalDocumentFee += itemDocumentFee;
+                totalOtherFee1 += itemOtherFee1;
+                totalOtherFee2 += itemOtherFee2;
+                
+                customFees.forEach(fee => {
+                    if (fee.id === 3) totalOtherFee3 += itemCustomFees[fee.id] || 0;
+                    if (fee.id === 4) totalOtherFee4 += itemCustomFees[fee.id] || 0;
+                });
+                
+                grandTotal += itemTotal;
+                
+                let customFeesHtml = '';
+                customFees.forEach(fee => {
+                    customFeesHtml += `
+                        <td>
+                            <input type="number" class="form-control form-control-sm fee-edit-input" 
+                                   data-id="${item.id}" data-fee="otherFee${fee.id}" 
+                                   value="${(itemCustomFees[fee.id] || 0).toFixed(2)}" step="0.01" min="0">
+                        </td>`;
+                });
+                
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.arrivalDate}</td>
+                    <td>${item.billNo}</td>
+                    <td>${item.containerNo}</td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm fee-edit-input" 
+                               data-id="${item.id}" data-fee="customsFee" 
+                               value="${itemCustomsFee.toFixed(2)}" step="0.01" min="0">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm fee-edit-input" 
+                               data-id="${item.id}" data-fee="inspectionFee" 
+                               value="${itemInspectionFee.toFixed(2)}" step="0.01" min="0">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm fee-edit-input" 
+                               data-id="${item.id}" data-fee="documentFee" 
+                               value="${itemDocumentFee.toFixed(2)}" step="0.01" min="0">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm fee-edit-input" 
+                               data-id="${item.id}" data-fee="otherFee1" 
+                               value="${itemOtherFee1.toFixed(2)}" step="0.01" min="0">
+                    </td>
+                    <td>
+                        <input type="number" class="form-control form-control-sm fee-edit-input" 
+                               data-id="${item.id}" data-fee="otherFee2" 
+                               value="${itemOtherFee2.toFixed(2)}" step="0.01" min="0">
+                    </td>
+                    ${customFeesHtml}
+                    <td class="fw-bold">${itemTotal.toFixed(2)}</td>
+                    <td>
+                        <input type="text" class="form-control form-control-sm remark-input" 
+                               placeholder="备注" data-id="${item.id}" value="${item.remark || ''}">
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+            
+            // 更新总计行
+            document.getElementById('totalCustomsFee').textContent = totalCustomsFee.toFixed(2);
+            document.getElementById('totalInspectionFee').textContent = totalInspectionFee.toFixed(2);
+            document.getElementById('totalDocumentFee').textContent = totalDocumentFee.toFixed(2);
+            document.getElementById('totalOtherFee1').textContent = totalOtherFee1.toFixed(2);
+            document.getElementById('totalOtherFee2').textContent = totalOtherFee2.toFixed(2);
+            
+            if (customFees.some(fee => fee.id === 3)) {
+                document.getElementById('totalOtherFee3').textContent = totalOtherFee3.toFixed(2);
+            }
+            if (customFees.some(fee => fee.id === 4)) {
+                document.getElementById('totalOtherFee4').textContent = totalOtherFee4.toFixed(2);
+            }
+            
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+            
+            // 绑定费用编辑事件
+            bindFeeEditEvents();
+            
+            // 启用PDF导出按钮
+            document.getElementById('exportBillPdf').disabled = false;
+            
+            // 如果有搜索条件，高亮显示结果
+            if (searchBillQuery) {
+                const filteredItems = selectedItemsForBill.filter(item => {
+                    const searchField = item[searchBillType] || '';
+                    return searchField.toString().toLowerCase().includes(searchBillQuery.toLowerCase());
+                });
+                highlightSearchResults(filteredItems);
+            }
+        }
+
+        // 绑定费用编辑事件
+        function bindFeeEditEvents() {
+            document.querySelectorAll('.fee-edit-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const itemId = this.getAttribute('data-id');
+                    const feeType = this.getAttribute('data-fee');
+                    const value = parseFloat(this.value) || 0;
+                    
+                    // 更新对应数据项的费用
+                    const item = selectedItemsForBill.find(item => item.id === itemId);
+                    if (item) {
+                        item[feeType] = value;
+                        
+                        // 重新计算并更新该行的总计
+                        updateRowTotal(itemId);
+                    }
+                });
+            });
+            
+            // 绑定备注输入事件
+            bindRemarkEditEvents();
+        }
+        
+        // 绑定备注编辑事件
+        function bindRemarkEditEvents() {
+            document.querySelectorAll('.remark-input').forEach(input => {
+                input.addEventListener('change', function() {
+                    const itemId = this.getAttribute('data-id');
+                    const value = this.value;
+                    
+                    const item = selectedItemsForBill.find(item => item.id === itemId);
+                    if (item) {
+                        item.remark = value;
+                    }
+                });
+            });
+        }
+
+        // 更新单行总计
+        function updateRowTotal(itemId) {
+            const item = selectedItemsForBill.find(item => item.id === itemId);
+            if (!item) return;
+            
+            // 计算该行总计
+            let rowTotal = 0;
+            
+            // 基础费用
+            rowTotal += item.customsFee || 0;
+            rowTotal += item.inspectionFee || 0;
+            rowTotal += item.documentFee || 0;
+            rowTotal += item.otherFee1 || 0;
+            rowTotal += item.otherFee2 || 0;
+            
+            // 自定义费用
+            customFees.forEach(fee => {
+                rowTotal += item[`otherFee${fee.id}`] || 0;
+            });
+            
+            // 更新显示的总计
+            const row = document.querySelector(`tr[data-id="${itemId}"]`);
+            if (row) {
+                const totalCell = row.querySelector('td.fw-bold');
+                if (totalCell) {
+                    totalCell.textContent = rowTotal.toFixed(2);
+                }
+            }
+            
+            // 更新全局总计
+            updateGrandTotal();
+        }
+
+        // 更新全局总计
+        function updateGrandTotal() {
+            let totalCustomsFee = 0;
+            let totalInspectionFee = 0;
+            let totalDocumentFee = 0;
+            let totalOtherFee1 = 0;
+            let totalOtherFee2 = 0;
+            let totalOtherFee3 = 0;
+            let totalOtherFee4 = 0;
+            let grandTotal = 0;
+            
+            selectedItemsForBill.forEach(item => {
+                totalCustomsFee += item.customsFee || 0;
+                totalInspectionFee += item.inspectionFee || 0;
+                totalDocumentFee += item.documentFee || 0;
+                totalOtherFee1 += item.otherFee1 || 0;
+                totalOtherFee2 += item.otherFee2 || 0;
+                
+                customFees.forEach(fee => {
+                    if (fee.id === 3) totalOtherFee3 += item[`otherFee${fee.id}`] || 0;
+                    if (fee.id === 4) totalOtherFee4 += item[`otherFee${fee.id}`] || 0;
+                });
+                
+                grandTotal += (item.customsFee || 0) + (item.inspectionFee || 0) + (item.documentFee || 0) + 
+                             (item.otherFee1 || 0) + (item.otherFee2 || 0);
+                
+                customFees.forEach(fee => {
+                    grandTotal += item[`otherFee${fee.id}`] || 0;
+                });
+            });
+            
+            // 更新总计显示
+            document.getElementById('totalCustomsFee').textContent = totalCustomsFee.toFixed(2);
+            document.getElementById('totalInspectionFee').textContent = totalInspectionFee.toFixed(2);
+            document.getElementById('totalDocumentFee').textContent = totalDocumentFee.toFixed(2);
+            document.getElementById('totalOtherFee1').textContent = totalOtherFee1.toFixed(2);
+            document.getElementById('totalOtherFee2').textContent = totalOtherFee2.toFixed(2);
+            
+            if (customFees.some(fee => fee.id === 3)) {
+                document.getElementById('totalOtherFee3').textContent = totalOtherFee3.toFixed(2);
+            }
+            if (customFees.some(fee => fee.id === 4)) {
+                document.getElementById('totalOtherFee4').textContent = totalOtherFee4.toFixed(2);
+            }
+            
+            document.getElementById('grandTotal').textContent = grandTotal.toFixed(2);
+        }
+
+        // 导出账单Excel - 严格按照模板格式
+        function exportBillExcel() {
+            if (!checkLogin()) return;
+            
+            if (selectedItemsForBill.length === 0) {
+                alert('请先选择报关数据并生成预览');
+                return;
+            }
+
+            try {
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                
+                // 获取费用设置
+                const customsFee = parseFloat(document.getElementById('customsFee').value) || 0;
+                const inspectionFee = parseFloat(document.getElementById('inspectionFee').value) || 0;
+                const documentFee = parseFloat(document.getElementById('documentFee').value) || 0;
+                const otherFee1 = parseFloat(document.getElementById('otherFee1').value) || 0;
+                const otherFee2 = parseFloat(document.getElementById('otherFee2').value) || 0;
+                
+                // 获取其他费用名称
+                const otherFee1Name = document.getElementById('otherFee1Name').value || '其他费用1';
+                const otherFee2Name = document.getElementById('otherFee2Name').value || '其他费用2';
+                
+                // 获取自定义费用
+                const customFeeValues = {};
+                customFees.forEach(fee => {
+                    const feeValue = parseFloat(document.getElementById(`otherFee${fee.id}`).value) || 0;
+                    const feeName = document.getElementById(`otherFee${fee.id}Name`).value || `其他费用${fee.id}`;
+                    customFeeValues[fee.id] = {
+                        name: feeName,
+                        value: feeValue
+                    };
+                });
+
+                // 准备数据
+                const companyName = document.getElementById('companyName').value;
+                const year = document.getElementById('billYear').value;
+                const month = document.getElementById('billMonth').value;
+                
+                // 创建标题行 - 第一行：合并单元格
+                const titleRow = [`${companyName}    ${year}年${month}月报关费`];
+                
+                // 创建表头 - 第二行
+                const headers = ['序号', '到港时间', '提单号', '柜号', '报关费', '查验服务费', '代理换单费', otherFee1Name, otherFee2Name];
+                
+                // 添加自定义费用表头
+                customFees.forEach(fee => {
+                    headers.push(customFeeValues[fee.id].name);
+                });
+                
+                headers.push('合计', '备注');
+                
+                // 创建数据行
+                const dataRows = [];
+                let totalCustomsFee = 0;
+                let totalInspectionFee = 0;
+                let totalDocumentFee = 0;
+                let totalOtherFee1 = 0;
+                let totalOtherFee2 = 0;
+                let totalOtherFee3 = 0;
+                let totalOtherFee4 = 0;
+                let grandTotal = 0;
+                
+                selectedItemsForBill.forEach((item, index) => {
+                    // 使用实际设置的费用，而不是默认费用
+                    const itemCustomsFee = item.customsFee !== undefined ? item.customsFee : customsFee;
+                    const itemInspectionFee = item.inspectionFee !== undefined ? item.inspectionFee : inspectionFee;
+                    const itemDocumentFee = item.documentFee !== undefined ? item.documentFee : documentFee;
+                    const itemOtherFee1 = item.otherFee1 !== undefined ? item.otherFee1 : otherFee1;
+                    const itemOtherFee2 = item.otherFee2 !== undefined ? item.otherFee2 : otherFee2;
+                    
+                    // 计算自定义费用
+                    const itemCustomFees = {};
+                    let itemCustomFeesTotal = 0;
+                    customFees.forEach(fee => {
+                        itemCustomFees[fee.id] = item[`otherFee${fee.id}`] !== undefined ? item[`otherFee${fee.id}`] : customFeeValues[fee.id].value;
+                        itemCustomFeesTotal += itemCustomFees[fee.id];
+                    });
+                    
+                    const itemTotal = itemCustomsFee + itemInspectionFee + itemDocumentFee + itemOtherFee1 + itemOtherFee2 + itemCustomFeesTotal;
+                    
+                    // 累加总计
+                    totalCustomsFee += itemCustomsFee;
+                    totalInspectionFee += itemInspectionFee;
+                    totalDocumentFee += itemDocumentFee;
+                    totalOtherFee1 += itemOtherFee1;
+                    totalOtherFee2 += itemOtherFee2;
+                    
+                    customFees.forEach(fee => {
+                        if (fee.id === 3) totalOtherFee3 += itemCustomFees[fee.id] || 0;
+                        if (fee.id === 4) totalOtherFee4 += itemCustomFees[fee.id] || 0;
+                    });
+                    
+                    grandTotal += itemTotal;
+                    
+                    const row = [
+                        index + 1,
+                        item.arrivalDate,
+                        item.billNo,
+                        item.containerNo,
+                        itemCustomsFee,
+                        itemInspectionFee,
+                        itemDocumentFee,
+                        itemOtherFee1,
+                        itemOtherFee2
+                    ];
+                    
+                    // 添加自定义费用列
+                    customFees.forEach(fee => {
+                        row.push(itemCustomFees[fee.id] || 0);
+                    });
+                    
+                    row.push(itemTotal, item.remark || '');
+                    
+                    dataRows.push(row);
+                });
+                
+                // 创建总计行
+                const totalRow = ['合计', '', '', '', totalCustomsFee, totalInspectionFee, totalDocumentFee, totalOtherFee1, totalOtherFee2];
+                
+                // 添加自定义费用总计
+                customFees.forEach(fee => {
+                    if (fee.id === 3) totalRow.push(totalOtherFee3);
+                    if (fee.id === 4) totalRow.push(totalOtherFee4);
+                });
+                
+                totalRow.push(grandTotal, '');
+                
+                // 创建备注行
+                const remarkRow = ['备注：如冷库根据本模板提供每月费用明细清单，则优合给予冷库优先对账政策。'];
+                
+                // 合并所有数据
+                const wsData = [
+                    titleRow,
+                    headers,
+                    ...dataRows,
+                    totalRow,
+                    remarkRow
+                ];
+                
+                // 创建工作表
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                // 设置合并单元格（标题行）
+                if (!ws['!merges']) ws['!merges'] = [];
+                // 合并第一行的所有列
+                ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } });
+                
+                // 设置列宽
+                const colWidths = [
+                    { wch: 8 },  // 序号
+                    { wch: 12 }, // 到港时间
+                    { wch: 15 }, // 提单号
+                    { wch: 15 }, // 柜号
+                    { wch: 10 }, // 报关费
+                    { wch: 12 }, // 查验服务费
+                    { wch: 12 }, // 代理换单费
+                    { wch: 15 }, // 其他费用1
+                    { wch: 15 }, // 其他费用2
+                ];
+                
+                // 添加自定义费用列宽
+                customFees.forEach(() => {
+                    colWidths.push({ wch: 15 });
+                });
+                
+                // 添加合计和备注列宽
+                colWidths.push({ wch: 10 }, { wch: 20 });
+                
+                ws['!cols'] = colWidths;
+                
+                // 设置单元格样式
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                
+                // 遍历所有单元格设置样式
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const cell_address = {c: C, r: R};
+                        const cell_ref = XLSX.utils.encode_cell(cell_address);
+                        
+                        if (!ws[cell_ref]) continue;
+                        
+                        // 设置边框
+                        if (!ws[cell_ref].s) ws[cell_ref].s = {};
+                        ws[cell_ref].s.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        
+                        // 设置对齐方式
+                        ws[cell_ref].s.alignment = {
+                            horizontal: 'center',
+                            vertical: 'center'
+                        };
+                        
+                        // 第一行：标题行样式
+                        if (R === 0) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 18,
+                                bold: true
+                            };
+                        }
+                        // 第二行：表头行样式
+                        else if (R === 1) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 12
+                            };
+                        }
+                        // 数据行样式
+                        else if (R < wsData.length - 2) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 11
+                            };
+                        }
+                        // 合计行样式
+                        else if (R === wsData.length - 2) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 11,
+                                bold: true
+                            };
+                        }
+                        // 备注行样式
+                        else if (R === wsData.length - 1) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 11,
+                                bold: true
+                            };
+                            ws[cell_ref].s.alignment = {
+                                horizontal: 'left',
+                                vertical: 'center'
+                            };
+                        }
+                    }
+                }
+                
+                // 添加到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '账单');
+                
+                // 生成文件名
+                const fileName = `${companyName}${year}年${month}月报关费.xlsx`;
+                
+                // 导出文件
+                XLSX.writeFile(wb, fileName);
+                
+            } catch (error) {
+                console.error('导出Excel失败:', error);
+                alert('导出Excel失败: ' + error.message);
+            }
+        }
+
+        // 保存生成的账单
+        async function saveGeneratedBill() {
+            if (!checkLogin()) return;
+            
+            if (selectedItemsForBill.length === 0) {
+                alert('请选择要生成账单的报关数据');
+                return;
+            }
+            
+            const companyName = document.getElementById('companyName').value;
+            const year = document.getElementById('billYear').value;
+            const month = document.getElementById('billMonth').value;
+            
+            if (!companyName) {
+                alert('请填写公司名称');
+                return;
+            }
+            
+            try {
+                // 获取费用设置
+                const customsFee = parseFloat(document.getElementById('customsFee').value) || 0;
+                const inspectionFee = parseFloat(document.getElementById('inspectionFee').value) || 0;
+                const documentFee = parseFloat(document.getElementById('documentFee').value) || 0;
+                const otherFee1 = parseFloat(document.getElementById('otherFee1').value) || 0;
+                const otherFee2 = parseFloat(document.getElementById('otherFee2').value) || 0;
+                
+                // 获取其他费用名称
+                const otherFee1Name = document.getElementById('otherFee1Name').value || '其他费用1';
+                const otherFee2Name = document.getElementById('otherFee2Name').value || '其他费用2';
+                
+                // 获取自定义费用
+                const customFeeValues = [];
+                customFees.forEach(fee => {
+                    const feeValue = parseFloat(document.getElementById(`otherFee${fee.id}`).value) || 0;
+                    const feeName = document.getElementById(`otherFee${fee.id}Name`).value || `其他费用${fee.id}`;
+                    customFeeValues.push({
+                        id: fee.id,
+                        name: feeName,
+                        value: feeValue
+                    });
+                });
+                
+                // 获取备注
+                const billItems = selectedItemsForBill.map((item, index) => {
+                    const remarkInput = document.querySelector(`input[data-id="${item.id}"]`);
+                    const remark = remarkInput ? remarkInput.value : '';
+                    
+                    // 使用实际设置的费用，而不是默认费用
+                    const itemCustomsFee = item.customsFee !== undefined ? item.customsFee : customsFee;
+                    const itemInspectionFee = item.inspectionFee !== undefined ? item.inspectionFee : inspectionFee;
+                    const itemDocumentFee = item.documentFee !== undefined ? item.documentFee : documentFee;
+                    const itemOtherFee1 = item.otherFee1 !== undefined ? item.otherFee1 : otherFee1;
+                    const itemOtherFee2 = item.otherFee2 !== undefined ? item.otherFee2 : otherFee2;
+                    
+                    // 计算自定义费用
+                    let itemCustomFeesTotal = 0;
+                    const itemCustomFees = {};
+                    customFees.forEach(fee => {
+                        itemCustomFees[`otherFee${fee.id}`] = item[`otherFee${fee.id}`] !== undefined ? item[`otherFee${fee.id}`] : customFeeValues.find(f => f.id === fee.id)?.value || 0;
+                        itemCustomFeesTotal += itemCustomFees[`otherFee${fee.id}`];
+                    });
+                    
+                    const itemTotal = itemCustomsFee + itemInspectionFee + itemDocumentFee + itemOtherFee1 + itemOtherFee2 + itemCustomFeesTotal;
+                    
+                    return {
+                        id: index + 1,
+                        customsDataId: item.id,
+                        arrivalDate: item.arrivalDate,
+                        declareDate: item.declareDate,
+                        billNo: item.billNo,
+                        containerNo: item.containerNo,
+                        customsNo: item.customsNo,
+                        domesticConsignee: item.domesticConsignee,
+                        consumptionUnit: item.consumptionUnit,
+                        country: item.country,
+                        productName: item.productName,
+                        customsFee: itemCustomsFee,
+                        inspectionFee: itemInspectionFee,
+                        documentFee: itemDocumentFee,
+                        otherFee1: itemOtherFee1,
+                        otherFee2: itemOtherFee2,
+                        otherFee1Name: otherFee1Name,
+                        otherFee2Name: otherFee2Name,
+                        ...itemCustomFees,
+                        total: itemTotal,
+                        remark: remark
+                    };
+                });
+                
+                // 计算总金额
+                const totalAmount = billItems.reduce((sum, item) => sum + item.total, 0);
+                
+                // 创建自定义费用配置
+                const customFeesConfig = [
+                    { name: '报关费', value: customsFee },
+                    { name: '查验服务费', value: inspectionFee },
+                    { name: '代理换单费', value: documentFee },
+                    { name: otherFee1Name, value: otherFee1 },
+                    { name: otherFee2Name, value: otherFee2 },
+                    ...customFeeValues
+                ];
+                
+                // 创建账单对象
+                const newBill = {
+                    billNo: generateBillNo(),
+                    billDate: new Date().toISOString().split('T')[0],
+                    companyName: companyName,
+                    year: year,
+                    month: month,
+                    billItems: billItems,
+                    totalAmount: totalAmount,
+                    currency: 'CNY',
+                    billStatus: '未确认',
+                    customFees: customFeesConfig
+                };
+                
+                // 保存到LeanCloud
+                const success = await saveBillToLeanCloud(newBill, true);
+                
+                if (success) {
+                    alert('账单保存成功');
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('generateBillModal'));
+                    modal.hide();
+                    await loadListData();
+                } else {
+                    alert('保存失败，请重试');
+                }
+                
+            } catch (error) {
+                console.error('保存账单失败:', error);
+                alert('保存失败: ' + error.message);
+            }
+        }
+
+        // 显示账单详情
+        function showBillDetail(id) {
+            if (!checkLogin()) return;
+            
+            const item = billsData.find(item => item.id === id);
+            if (!item) {
+                alert('找不到对应的账单数据');
+                return;
+            }
+
+            // 设置当前账单ID
+            document.getElementById('billDetailModal').setAttribute('data-current-id', id);
+
+            // 填充基本信息
+            document.getElementById('detailBillNo').textContent = item.billNo;
+            document.getElementById('detailCompanyName').textContent = item.companyName;
+            document.getElementById('detailBillDate').textContent = item.billDate;
+            document.getElementById('detailBillStatus').textContent = item.billStatus;
+            document.getElementById('detailTotalAmount').textContent = formatCurrency(item.totalAmount || 0, item.currency);
+            document.getElementById('detailPaymentDate').textContent = item.paymentDate || '-';
+            document.getElementById('detailPayee').textContent = item.payee || '-';
+            document.getElementById('detailRemark').textContent = item.remark || '-';
+            
+            // 更新其他费用表头
+            const customFeesConfig = item.customFees || [];
+            document.getElementById('detailOtherFee1Header').textContent = customFeesConfig[3]?.name || '其他费用1';
+            document.getElementById('detailOtherFee2Header').textContent = customFeesConfig[4]?.name || '其他费用2';
+            
+            // 显示自定义费用表头
+            if (customFeesConfig[5]) {
+                document.getElementById('detailOtherFee3Header').style.display = 'table-cell';
+                document.getElementById('detailOtherFee3Header').textContent = customFeesConfig[5].name;
+            } else {
+                document.getElementById('detailOtherFee3Header').style.display = 'none';
+            }
+            
+            if (customFeesConfig[6]) {
+                document.getElementById('detailOtherFee4Header').style.display = 'table-cell';
+                document.getElementById('detailOtherFee4Header').textContent = customFeesConfig[6].name;
+            } else {
+                document.getElementById('detailOtherFee4Header').style.display = 'none';
+            }
+            
+            // 填充账单明细
+            const tbody = document.getElementById('billDetailItems');
+            tbody.innerHTML = '';
+            
+            if (item.billItems && item.billItems.length > 0) {
+                item.billItems.forEach(billItem => {
+                    const row = document.createElement('tr');
+                    
+                    let customFeesHtml = '';
+                    if (customFeesConfig[5]) {
+                        customFeesHtml += `<td>${(billItem.otherFee3 || 0).toFixed(2)}</td>`;
+                    }
+                    if (customFeesConfig[6]) {
+                        customFeesHtml += `<td>${(billItem.otherFee4 || 0).toFixed(2)}</td>`;
+                    }
+                    
+                    row.innerHTML = `
+                        <td>${billItem.id}</td>
+                        <td>${billItem.arrivalDate}</td>
+                        <td>${billItem.billNo}</td>
+                        <td>${billItem.containerNo}</td>
+                        <td>${billItem.customsNo}</td>
+                        <td>${billItem.customsFee.toFixed(2)}</td>
+                        <td>${billItem.inspectionFee.toFixed(2)}</td>
+                        <td>${billItem.documentFee.toFixed(2)}</td>
+                        <td>${billItem.otherFee1.toFixed(2)}</td>
+                        <td>${billItem.otherFee2.toFixed(2)}</td>
+                        ${customFeesHtml}
+                        <td>${billItem.total.toFixed(2)}</td>
+                        <td>${billItem.remark || ''}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            }
+            
+            // 填充发票列表
+            const invoiceTbody = document.getElementById('invoiceList');
+            invoiceTbody.innerHTML = '';
+            
+            if (item.attachments && item.attachments.length > 0) {
+                item.attachments.forEach((attachment, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <a href="${attachment.fileUrl}" target="_blank">${attachment.name}</a>
+                        </td>
+                        <td>${attachment.type || '发票'}</td>
+                        <td>${attachment.uploadTime}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger delete-invoice" 
+                                    data-id="${item.id}" 
+                                    data-attachment-id="${attachment.id}">
+                                删除
+                            </button>
+                        </td>
+                    `;
+                    invoiceTbody.appendChild(row);
+                });
+            } else {
+                invoiceTbody.innerHTML = '<tr><td colspan="4" class="text-center">暂无发票</td></tr>';
+            }
+            
+            // 绑定发票删除事件
+            document.querySelectorAll('.delete-invoice').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    if (!checkLogin()) return;
+                    const billId = this.getAttribute('data-id');
+                    const attachmentId = this.getAttribute('data-attachment-id');
+                    deleteInvoice(billId, attachmentId);
+                });
+            });
+            
+            // 根据账单状态控制按钮
+            const confirmBtn = document.getElementById('confirmBill');
+            const exportPdfBtn = document.getElementById('exportDetailPdf');
+            
+            if (item.billStatus === '未确认') {
+                confirmBtn.style.display = 'inline-block';
+                confirmBtn.disabled = false;
+                exportPdfBtn.disabled = true;
+            } else if (item.billStatus === '已确认') {
+                confirmBtn.style.display = 'none';
+                exportPdfBtn.disabled = false;
+            } else if (item.billStatus === '已收款') {
+                confirmBtn.style.display = 'none';
+                exportPdfBtn.disabled = false;
+            }
+            
+            // 隐藏上传区域
+            document.getElementById('invoiceUploadSection').style.display = 'none';
+            
+            const modal = new bootstrap.Modal(document.getElementById('billDetailModal'));
+            modal.show();
+        }
+
+        // 导出详情Excel - 严格按照模板格式
+        function exportDetailExcel(billItem) {
+            try {
+                // 创建工作簿
+                const wb = XLSX.utils.book_new();
+                
+                // 准备数据
+                const companyName = billItem.companyName;
+                const year = billItem.year;
+                const month = billItem.month;
+                const customFeesConfig = billItem.customFees || [];
+                
+                // 创建标题行
+                const titleRow = [`${companyName}    ${year}年${month}月报关费`];
+                
+                // 创建表头
+                const headers = ['序号', '到港时间', '提单号', '柜号', '报关费', '查验服务费', '代理换单费'];
+                
+                // 添加其他费用表头
+                headers.push(
+                    customFeesConfig[3]?.name || '其他费用1',
+                    customFeesConfig[4]?.name || '其他费用2'
+                );
+                
+                // 添加自定义费用表头
+                if (customFeesConfig[5]) headers.push(customFeesConfig[5].name);
+                if (customFeesConfig[6]) headers.push(customFeesConfig[6].name);
+                
+                headers.push('合计', '备注');
+                
+                // 创建数据行
+                const dataRows = [];
+                let totalCustomsFee = 0;
+                let totalInspectionFee = 0;
+                let totalDocumentFee = 0;
+                let totalOtherFee1 = 0;
+                let totalOtherFee2 = 0;
+                let totalOtherFee3 = 0;
+                let totalOtherFee4 = 0;
+                let grandTotal = 0;
+                
+                if (billItem.billItems && billItem.billItems.length > 0) {
+                    billItem.billItems.forEach((item, index) => {
+                        totalCustomsFee += item.customsFee || 0;
+                        totalInspectionFee += item.inspectionFee || 0;
+                        totalDocumentFee += item.documentFee || 0;
+                        totalOtherFee1 += item.otherFee1 || 0;
+                        totalOtherFee2 += item.otherFee2 || 0;
+                        totalOtherFee3 += item.otherFee3 || 0;
+                        totalOtherFee4 += item.otherFee4 || 0;
+                        grandTotal += item.total || 0;
+                        
+                        const row = [
+                            index + 1,
+                            item.arrivalDate,
+                            item.billNo,
+                            item.containerNo,
+                            item.customsFee || 0,
+                            item.inspectionFee || 0,
+                            item.documentFee || 0,
+                            item.otherFee1 || 0,
+                            item.otherFee2 || 0
+                        ];
+                        
+                        // 添加自定义费用列
+                        if (customFeesConfig[5]) row.push(item.otherFee3 || 0);
+                        if (customFeesConfig[6]) row.push(item.otherFee4 || 0);
+                        
+                        row.push(item.total || 0, item.remark || '');
+                        
+                        dataRows.push(row);
+                    });
+                }
+                
+                // 创建总计行
+                const totalRow = ['合计', '', '', '', totalCustomsFee, totalInspectionFee, totalDocumentFee, totalOtherFee1, totalOtherFee2];
+                
+                // 添加自定义费用总计
+                if (customFeesConfig[5]) totalRow.push(totalOtherFee3);
+                if (customFeesConfig[6]) totalRow.push(totalOtherFee4);
+                
+                totalRow.push(grandTotal, '');
+                
+                // 创建备注行
+                const remarkRow = ['备注：如冷库根据本模板提供每月费用明细清单，则优合给予冷库优先对账政策。'];
+                
+                // 合并所有数据
+                const wsData = [
+                    titleRow,
+                    headers,
+                    ...dataRows,
+                    totalRow,
+                    remarkRow
+                ];
+                
+                // 创建工作表
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                
+                // 设置合并单元格（标题行）
+                if (!ws['!merges']) ws['!merges'] = [];
+                ws['!merges'].push({ s: { r: 0, c: 0 }, e: { r: 0, c: headers.length - 1 } });
+                
+                // 设置列宽
+                const colWidths = [
+                    { wch: 8 },  // 序号
+                    { wch: 12 }, // 到港时间
+                    { wch: 15 }, // 提单号
+                    { wch: 15 }, // 柜号
+                    { wch: 10 }, // 报关费
+                    { wch: 12 }, // 查验服务费
+                    { wch: 12 }, // 代理换单费
+                    { wch: 15 }, // 其他费用1
+                    { wch: 15 }, // 其他费用2
+                ];
+                
+                // 添加自定义费用列宽
+                if (customFeesConfig[5]) colWidths.push({ wch: 15 });
+                if (customFeesConfig[6]) colWidths.push({ wch: 15 });
+                
+                // 添加合计和备注列宽
+                colWidths.push({ wch: 10 }, { wch: 20 });
+                
+                ws['!cols'] = colWidths;
+                
+                // 设置单元格样式（与上面相同的样式设置逻辑）
+                const range = XLSX.utils.decode_range(ws['!ref']);
+                
+                for (let R = range.s.r; R <= range.e.r; R++) {
+                    for (let C = range.s.c; C <= range.e.c; C++) {
+                        const cell_address = {c: C, r: R};
+                        const cell_ref = XLSX.utils.encode_cell(cell_address);
+                        
+                        if (!ws[cell_ref]) continue;
+                        
+                        // 设置边框
+                        if (!ws[cell_ref].s) ws[cell_ref].s = {};
+                        ws[cell_ref].s.border = {
+                            top: { style: 'thin' },
+                            left: { style: 'thin' },
+                            bottom: { style: 'thin' },
+                            right: { style: 'thin' }
+                        };
+                        
+                        // 设置对齐方式
+                        ws[cell_ref].s.alignment = {
+                            horizontal: 'center',
+                            vertical: 'center'
+                        };
+                        
+                        // 第一行：标题行样式
+                        if (R === 0) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 18,
+                                bold: true
+                            };
+                        }
+                        // 第二行：表头行样式
+                        else if (R === 1) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 12
+                            };
+                        }
+                        // 数据行样式
+                        else if (R < wsData.length - 2) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 11
+                            };
+                        }
+                        // 合计行样式
+                        else if (R === wsData.length - 2) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 11,
+                                bold: true
+                            };
+                        }
+                        // 备注行样式
+                        else if (R === wsData.length - 1) {
+                            ws[cell_ref].s.font = {
+                                name: '宋体',
+                                sz: 11,
+                                bold: true
+                            };
+                            ws[cell_ref].s.alignment = {
+                                horizontal: 'left',
+                                vertical: 'center'
+                            };
+                        }
+                    }
+                }
+                
+                // 添加到工作簿
+                XLSX.utils.book_append_sheet(wb, ws, '账单');
+                
+                // 生成文件名
+                const fileName = `${companyName}${year}年${month}月报关费.xlsx`;
+                
+                // 导出文件
+                XLSX.writeFile(wb, fileName);
+                
+            } catch (error) {
+                console.error('导出Excel失败:', error);
+                alert('导出Excel失败: ' + error.message);
+            }
+        }
+
+        // 确认账单
+        async function confirmBill() {
+            if (!checkLogin()) return;
+            
+            const billId = document.getElementById('billDetailModal').getAttribute('data-current-id');
+            if (!billId) {
+                alert('无法确定当前账单');
+                return;
+            }
+            
+            if (!confirm('确认后账单将无法修改，确定要确认此账单吗？')) {
+                return;
+            }
+            
+            try {
+                const item = billsData.find(item => item.id === billId);
+                if (!item) {
+                    alert('找不到对应的账单数据');
+                    return;
+                }
+                
+                // 更新账单状态
+                item.billStatus = '已确认';
+                
+                // 保存到LeanCloud
+                if (item.leanCloudObject) {
+                    item.leanCloudObject.set('billStatus', '已确认');
+                    await item.leanCloudObject.save();
+                    
+                    alert('账单确认成功');
+                    
+                    // 关闭模态框并刷新数据
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('billDetailModal'));
+                    modal.hide();
+                    await loadListData();
+                }
+                
+            } catch (error) {
+                console.error('确认账单失败:', error);
+                alert('确认失败: ' + error.message);
+            }
+        }
+
+        // 上传发票
+        function showUploadInvoice() {
+            if (!checkLogin()) return;
+            document.getElementById('invoiceUploadSection').style.display = 'block';
+        }
+
+        // 确认上传发票
+        async function confirmUploadInvoice() {
+            if (!checkLogin()) return;
+            
+            const fileInput = document.getElementById('invoiceUpload');
+            const billId = document.getElementById('billDetailModal').getAttribute('data-current-id');
+            
+            if (!fileInput || fileInput.files.length === 0) {
+                alert('请选择要上传的发票文件');
+                return;
+            }
+            
+            if (!billId) {
+                alert('无法确定当前账单');
+                return;
+            }
+            
+            try {
+                const file = fileInput.files[0];
+                const avFile = new AV.File(file.name, file);
+                await avFile.save();
+                
+                // 获取账单对象
+                const item = billsData.find(item => item.id === billId);
+                if (!item) {
+                    alert('找不到对应的账单数据');
+                    return;
+                }
+                
+                // 更新附件列表
+                const attachments = item.attachments || [];
+                const newAttachment = {
+                    id: attachments.length > 0 ? Math.max(...attachments.map(a => a.id || 0)) + 1 : 1,
+                    type: '发票',
+                    name: file.name,
+                    uploadTime: new Date().toLocaleString('zh-CN'),
+                    fileUrl: avFile.url(),
+                    fileId: avFile.id
+                };
+                attachments.push(newAttachment);
+                
+                // 保存到LeanCloud
+                if (item.leanCloudObject) {
+                    item.leanCloudObject.set('attachments', attachments);
+                    await item.leanCloudObject.save();
+                    
+                    // 更新本地数据
+                    item.attachments = attachments;
+                    
+                    alert('发票上传成功');
+                    fileInput.value = '';
+                    document.getElementById('invoiceUploadSection').style.display = 'none';
+                    
+                    // 刷新发票列表
+                    showBillDetail(billId);
+                }
+                
+            } catch (error) {
+                console.error('上传发票失败:', error);
+                alert('上传失败: ' + error.message);
+            }
+        }
+
+        // 取消上传
+        function cancelUpload() {
+            if (!checkLogin()) return;
+            document.getElementById('invoiceUpload').value = '';
+            document.getElementById('invoiceUploadSection').style.display = 'none';
+        }
+
+        // 删除发票
+        async function deleteInvoice(billId, attachmentId) {
+            if (!checkLogin()) return;
+            
+            if (!confirm('确定要删除这个发票吗？')) return;
+            
+            try {
+                const item = billsData.find(item => item.id === billId);
+                if (!item) {
+                    alert('找不到对应的账单数据');
+                    return;
+                }
+                
+                // 找到要删除的附件
+                const attachmentToDelete = item.attachments.find(att => att.id == attachmentId);
+                if (!attachmentToDelete) {
+                    alert('找不到要删除的发票');
+                    return;
+                }
+                
+                const updatedAttachments = item.attachments.filter(att => att.id != attachmentId);
+                
+                // 1. 先删除 LeanCloud 上的实际文件
+                if (attachmentToDelete.fileId) {
+                    await deleteFileFromLeanCloud(attachmentToDelete.fileId);
+                }
+                
+                // 2. 更新LeanCloud记录
+                if (item.leanCloudObject) {
+                    item.leanCloudObject.set('attachments', updatedAttachments);
+                    await item.leanCloudObject.save();
+                    
+                    // 更新本地数据
+                    item.attachments = updatedAttachments;
+                    
+                    alert('发票删除成功');
+                    
+                    // 刷新发票列表
+                    showBillDetail(billId);
+                }
+                
+            } catch (error) {
+                console.error('删除发票失败:', error);
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        // 导出账单PDF
+        function exportBillPdf() {
+            alert('PDF导出功能正在开发中...');
+        }
+
+        // 导出详情PDF
+        function exportDetailPdf() {
+            exportBillPdf();
+        }
+
+        // 删除账单
+        async function deleteBill(id) {
+            if (!checkLogin()) return;
+            
+            if (confirm('确定要删除这条账单记录吗？此操作不可恢复。')) {
+                try {
+                    const itemToDelete = billsData.find(item => item.id === id);
+                    
+                    if (itemToDelete) {
+                        const success = await deleteBillFromLeanCloud(itemToDelete);
+                        
+                        if (success) {
+                            await loadListData();
+                        } else {
+                            alert('删除失败，请重试');
+                        }
+                    }
+                } catch (error) {
+                    console.error('删除失败:', error);
+                    alert('删除失败，请重试');
+                }
+            }
+        }
+
+        // 清空账单筛选条件
+        function clearBills() {
+            document.getElementById('billDateRange').value = '';
+            document.getElementById('billStatusFilter').value = '';
+            document.getElementById('companyNameFilter').value = '';
+
+            applyBillsFilters();
+            billsCurrentPageIndex = 1;
+            updateBillsPagination();
+            renderBillsTable();
+            updateStatistics();
+        }
+
+        // 更新账单分页
+        function updateBillsPagination() {
+            billsTotalPages = Math.ceil(filteredBillsData.length / billsItemsPerPage);
+            const paginationElement = document.getElementById('billsPagination');
+            
+            if (billsTotalPages <= 1) {
+                paginationElement.innerHTML = '';
+                return;
+            }
+            
+            let paginationHTML = '';
+            
+            if (billsCurrentPageIndex > 1) {
+                paginationHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${billsCurrentPageIndex - 1}">上一页</a></li>`;
+            } else {
+                paginationHTML += `<li class="page-item disabled"><a class="page-link" href="#">上一页</a></li>`;
+            }
+            
+            const maxVisiblePages = 5;
+            let startPage = Math.max(1, billsCurrentPageIndex - Math.floor(maxVisiblePages / 2));
+            let endPage = Math.min(billsTotalPages, startPage + maxVisiblePages - 1);
+            
+            if (endPage - startPage + 1 < maxVisiblePages) {
+                startPage = Math.max(1, endPage - maxVisiblePages + 1);
+            }
+            
+            for (let i = startPage; i <= endPage; i++) {
+                if (i === billsCurrentPageIndex) {
+                    paginationHTML += `<li class="page-item active"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                } else {
+                    paginationHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+                }
+            }
+            
+            if (billsCurrentPageIndex < billsTotalPages) {
+                paginationHTML += `<li class="page-item"><a class="page-link" href="#" data-page="${billsCurrentPageIndex + 1}">下一页</a></li>`;
+            } else {
+                paginationHTML += `<li class="page-item disabled"><a class="page-link" href="#">下一页</a></li>`;
+            }
+            
+            paginationElement.innerHTML = paginationHTML;
+            
+            document.querySelectorAll('#billsPagination .page-link').forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const page = parseInt(this.getAttribute('data-page'));
+                    if (page && page !== billsCurrentPageIndex) {
+                        billsCurrentPageIndex = page;
+                        renderBillsTable();
+                        updateBillsPagination();
+                    }
+                });
+            });
+        }
+
+        // 更新账单分页信息
+        function updateBillsPaginationInfo() {
+            const totalItems = filteredBillsData.length;
+            const startItem = totalItems > 0 ? (billsCurrentPageIndex - 1) * billsItemsPerPage + 1 : 0;
+            const endItem = Math.min(billsCurrentPageIndex * billsItemsPerPage, totalItems);
+            
+            document.getElementById('billsPaginationInfo').innerHTML = 
+                `共 ${billsTotalPages} 页，每页显示 ${billsItemsPerPage} 条，共 ${totalItems} 条记录，当前显示第 ${startItem}-${endItem} 条`;
+        }
+
+        // LeanCloud账单数据操作
+        async function saveBillToLeanCloud(billItem, isNew = false) {
+            try {
+                let billObject;
+                
+                if (isNew) {
+                    billObject = new AV.Object('Bills');
+                } else {
+                    billObject = billItem.leanCloudObject;
+                }
+                
+                billObject.set('billNo', billItem.billNo);
+                billObject.set('billDate', billItem.billDate);
+                billObject.set('companyName', billItem.companyName);
+                billObject.set('containerNo', billItem.containerNo);
+                billObject.set('customsNo', billItem.customsNo);
+                billObject.set('billNoSearch', billItem.billNoSearch);
+                billObject.set('domesticConsignee', billItem.domesticConsignee);
+                billObject.set('totalAmount', billItem.totalAmount);
+                billObject.set('currency', billItem.currency);
+                billObject.set('billStatus', billItem.billStatus);
+                billObject.set('paymentDate', billItem.paymentDate);
+                billObject.set('payee', billItem.payee);
+                billObject.set('remark', billItem.remark);
+                billObject.set('billItems', billItem.billItems);
+                billObject.set('attachments', billItem.attachments || []);
+                billObject.set('customFees', billItem.customFees || []);
+                
+                await billObject.save();
+                
+                if (isNew) {
+                    billItem.leanCloudObject = billObject;
+                    billItem.id = billObject.id;
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('保存到LeanCloud失败:', error);
+                return false;
+            }
+        }
+
+        async function deleteBillFromLeanCloud(billItem) {
+            try {
+                if (billItem.leanCloudObject) {
+                    // 先删除所有关联的文件
+                    if (billItem.attachments && billItem.attachments.length > 0) {
+                        for (const attachment of billItem.attachments) {
+                            if (attachment.fileId) {
+                                await deleteFileFromLeanCloud(attachment.fileId);
+                            }
+                        }
+                    }
+                    
+                    // 再删除账单记录
+                    await billItem.leanCloudObject.destroy();
+                    return true;
+                }
+                return false;
+            } catch (error) {
+                console.error('从LeanCloud删除失败:', error);
+                return false;
+            }
+        }
+
+        // 检查表是否存在
+        async function checkTableExists(className) {
+            try {
+                const query = new AV.Query(className);
+                query.limit(1);
+                await query.first();
+                return true;
+            } catch (error) {
+                if (error.code === 101) {
+                    return false;
+                }
+                throw error;
+            }
+        }
+
+        // 删除 LeanCloud 上的文件
+        async function deleteFileFromLeanCloud(fileId) {
+            try {
+                if (!fileId) {
+                    console.log('文件ID为空，跳过删除');
+                    return true;
+                }
+                
+                const file = AV.Object.createWithoutData('_File', fileId);
+                await file.destroy();
+                console.log('LeanCloud 文件删除成功:', fileId);
+                return true;
+            } catch (error) {
+                console.error('删除 LeanCloud 文件失败:', error);
+                // 如果文件不存在或其他错误，继续执行
+                return false;
+            }
+        }
+
+        // 导出全局函数
+        window.addCustomFee = addCustomFee;
+        window.removeCustomFee = removeCustomFee;
+        window.searchBillPreview = searchBillPreview;
+    </script>
+</body>
+</html>
