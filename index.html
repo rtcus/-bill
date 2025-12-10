@@ -35,7 +35,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            z-index: 9999;
+            z-index: 99999;
         }
 
         .login-box {
@@ -88,14 +88,19 @@
             font-size: 0.85rem;
         }
 
-        /* 主页面样式 */
+        /* 主页面样式 - 修复：移除display:none */
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7fa;
             color: #333;
             margin: 0;
             padding: 20px;
-            display: none; /* 默认隐藏，登录后显示 */
+            /* display: none; 移除这行 */
+        }
+
+        /* 修复：主页面初始隐藏 */
+        #mainContent {
+            display: none;
         }
 
         .page-header {
@@ -448,6 +453,24 @@
             text-align: center;
             display: none;
         }
+
+        /* 修复：模态框样式调整 */
+        .modal-xl-custom {
+            max-width: 95%;
+            width: 95%;
+        }
+
+        @media (min-width: 1200px) {
+            .modal-xl-custom {
+                max-width: 1140px;
+            }
+        }
+
+        @media (min-width: 1400px) {
+            .modal-xl-custom {
+                max-width: 1300px;
+            }
+        }
     </style>
 </head>
 <body>
@@ -637,9 +660,9 @@
 
     <!-- ========== 模态框区域 ========== -->
 
-    <!-- 生成账单模态框 -->
+    <!-- 生成账单模态框 - 修改：使用自定义宽度的modal -->
     <div class="modal fade" id="generateBillModal" tabindex="-1" aria-labelledby="generateBillModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl-custom">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="generateBillModalLabel">生成账单</h5>
@@ -841,9 +864,9 @@
         </div>
     </div>
 
-    <!-- 账单详情模态框 -->
+    <!-- 账单详情模态框 - 修改：使用自定义宽度的modal -->
     <div class="modal fade" id="billDetailModal" tabindex="-1" aria-labelledby="billDetailModalLabel" aria-hidden="true">
-        <div class="modal-dialog modal-xl">
+        <div class="modal-dialog modal-xl-custom">
             <div class="modal-content">
                 <div class="modal-header">
                     <h5 class="modal-title" id="billDetailModalLabel">账单详情</h5>
@@ -976,9 +999,28 @@
             serverURL: 'https://api.rtcus.cn'
         });
 
-        // 页面加载完成后执行
+        // 页面加载完成后执行 - 修复版本
         document.addEventListener('DOMContentLoaded', function() {
-            checkLoginStatus();
+            console.log('页面加载完成，检查登录状态');
+            
+            // 确保登录页面初始状态正确
+            const loginContainer = document.getElementById('loginContainer');
+            const mainContent = document.getElementById('mainContent');
+            
+            if (loginContainer && mainContent) {
+                console.log('找到登录页面和主页面元素');
+                
+                // 初始状态：登录页面显示，主页面隐藏
+                loginContainer.style.display = 'flex';
+                mainContent.style.display = 'none';
+                
+                // 延迟检查登录状态，确保DOM完全加载
+                setTimeout(() => {
+                    checkLoginStatus();
+                }, 100);
+            } else {
+                console.error('找不到必要的DOM元素');
+            }
         });
 
         // 检查登录状态
@@ -986,24 +1028,39 @@
             try {
                 currentUser = AV.User.current();
                 
+                console.log('检查登录状态，当前用户:', currentUser);
+                
                 if (currentUser) {
                     // 验证token是否有效
                     await currentUser.isAuthenticated();
                     isLoggedIn = true;
+                    console.log('用户已登录，显示主页面');
                     showMainContent();
                 } else {
+                    console.log('用户未登录，显示登录页面');
                     showLoginPage();
                 }
             } catch (error) {
-                console.log('Token无效或已过期，需要重新登录');
+                console.log('Token无效或已过期，需要重新登录:', error);
                 showLoginPage();
             }
         }
 
-        // 显示登录页面
+        // 显示登录页面 - 修复版本
         function showLoginPage() {
-            document.getElementById('loginContainer').style.display = 'flex';
-            document.body.style.display = 'none';
+            console.log('显示登录页面');
+            
+            // 确保主页面隐藏
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) {
+                mainContent.style.display = 'none';
+            }
+            
+            // 确保登录页面显示
+            const loginContainer = document.getElementById('loginContainer');
+            if (loginContainer) {
+                loginContainer.style.display = 'flex';
+            }
             
             // 自动填充上次登录的用户名
             const lastUsername = localStorage.getItem('lastUsername');
@@ -1011,34 +1068,67 @@
                 document.getElementById('loginUsername').value = lastUsername;
             }
             
-            // 绑定登录表单事件
-            document.getElementById('loginForm').addEventListener('submit', async function(e) {
-                e.preventDefault();
-                await login();
-            });
-            
             // 绑定记住我复选框
             const rememberMe = document.getElementById('rememberMe');
             const savedRemember = localStorage.getItem('rememberMe') === 'true';
             rememberMe.checked = savedRemember;
-            rememberMe.addEventListener('change', function() {
-                localStorage.setItem('rememberMe', this.checked);
-            });
+            
+            // 绑定登录表单事件 - 使用一次性事件监听
+            const loginForm = document.getElementById('loginForm');
+            if (loginForm) {
+                // 移除所有现有的事件监听器
+                const newLoginForm = loginForm.cloneNode(true);
+                loginForm.parentNode.replaceChild(newLoginForm, loginForm);
+                
+                // 重新绑定事件
+                document.getElementById('loginForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    console.log('登录表单提交');
+                    login();
+                    return false;
+                });
+            }
+            
+            // 焦点设置在密码输入框
+            if (lastUsername && lastUsername.trim() !== '') {
+                document.getElementById('loginPassword').focus();
+            } else {
+                document.getElementById('loginUsername').focus();
+            }
         }
 
-        // 显示主页面
+        // 显示主页面 - 修复版本
         function showMainContent() {
-            document.getElementById('loginContainer').style.display = 'none';
-            document.body.style.display = 'block';
-            document.getElementById('mainContent').style.display = 'block';
+            console.log('显示主页面');
+            
+            // 确保登录页面隐藏
+            const loginContainer = document.getElementById('loginContainer');
+            if (loginContainer) {
+                loginContainer.style.display = 'none';
+            }
+            
+            // 确保主页面显示
+            const mainContent = document.getElementById('mainContent');
+            if (mainContent) {
+                mainContent.style.display = 'block';
+            } else {
+                console.error('找不到主页面元素');
+            }
             
             // 创建用户信息栏
             createUserInfoBar();
             
-            // 初始化功能
-            initDatePickers();
-            bindEvents();
-            loadListData();
+            // 初始化功能 - 使用setTimeout确保DOM更新
+            setTimeout(() => {
+                try {
+                    initDatePickers();
+                    bindEvents();
+                    loadListData();
+                } catch (error) {
+                    console.error('初始化功能失败:', error);
+                }
+            }, 100);
         }
 
         // 创建用户信息栏
@@ -1066,7 +1156,7 @@
             userInfoBar.querySelector('.logout-btn').addEventListener('click', logout);
         }
 
-        // 登录函数 - 使用 LeanCloud 内建账户
+        // 登录函数 - 修复版本
         async function login() {
             const username = document.getElementById('loginUsername').value.trim();
             const password = document.getElementById('loginPassword').value;
@@ -1095,13 +1185,10 @@
                 
                 // 保存登录信息
                 localStorage.setItem('lastUsername', username);
+                localStorage.setItem('rememberMe', rememberMe);
                 
-                if (rememberMe) {
-                    // 设置session token的有效期
-                    currentUser.set('sessionToken', currentUser.getSessionToken());
-                }
-                
-                // 显示主页面
+                // 显示主页面 - 确保执行
+                console.log('登录成功，切换到主页面');
                 showMainContent();
                 
             } catch (error) {
@@ -1114,6 +1201,8 @@
                     errorMessage = '用户名或密码错误';
                 } else if (error.code === 219) {
                     errorMessage = '登录失败次数超过限制，请稍后再试';
+                } else {
+                    errorMessage = `登录失败: ${error.message}`;
                 }
                 
                 showLoginError(errorMessage);
