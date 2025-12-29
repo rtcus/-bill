@@ -971,8 +971,19 @@
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 
+    <!-- 配置文件 - 必须在主脚本之前加载 -->
+    <script src="config.js"></script>
+
     <!-- ========== 账单管理JavaScript代码 ========== -->
     <script>
+        // 检查配置文件是否加载成功
+        if (typeof window.APP_CONFIG === 'undefined') {
+            console.error('❌ 配置文件未加载，请检查 config.js 文件是否存在');
+            alert('系统配置错误，请联系管理员');
+        } else {
+            console.log('✅ 配置文件加载成功', window.APP_CONFIG);
+        }
+
         // 账单管理功能模块
         let billsData = [];
         let filteredBillsData = [];
@@ -992,12 +1003,15 @@
         let currentUser = null;
         let isLoggedIn = false;
 
-        // LeanCloud初始化 - 使用 REST API 服务器
-        AV.init({
-            appId: 'qWTZ0xzNWk9B3bhk3vXGbfPl-gzGzoHsz',
-            appKey: 'n1MnTEgdQGWk2jouFA55NF1n',
-            serverURL: 'https://api.rtcus.cn'
-        });
+        // LeanCloud初始化 - 使用配置文件中的值
+        if (window.APP_CONFIG) {
+            AV.init({
+                appId: window.APP_CONFIG.LEANCLOUD_APP_ID,
+                appKey: window.APP_CONFIG.LEANCLOUD_APP_KEY,
+                serverURL: window.APP_CONFIG.LEANCLOUD_SERVER_URL
+            });
+            console.log('🔐 LeanCloud 初始化完成');
+        }
 
         // 页面加载完成后执行 - 修复版本
         document.addEventListener('DOMContentLoaded', function() {
