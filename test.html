@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>登录测试</title>
+</head>
+<body>
+    <h1>LeanCloud 登录测试</h1>
+    
+    <div>
+        <input type="text" id="username" placeholder="用户名"><br><br>
+        <input type="password" id="password" placeholder="密码"><br><br>
+        <button onclick="testLogin()">测试登录</button>
+    </div>
+    
+    <div id="result" style="margin-top: 20px;"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/leancloud-storage@4.13.2/dist/av-min.js"></script>
+    <script src="config.js"></script>
+    <script>
+        console.log('配置信息:', window.APP_CONFIG);
+        
+        // 初始化LeanCloud
+        if (window.APP_CONFIG) {
+            AV.init({
+                appId: window.APP_CONFIG.LEANCLOUD_APP_ID,
+                appKey: window.APP_CONFIG.LEANCLOUD_APP_KEY,
+                serverURL: window.APP_CONFIG.LEANCLOUD_SERVER_URL
+            });
+            console.log('✅ LeanCloud 初始化完成');
+        } else {
+            console.error('❌ 配置文件未加载');
+            document.getElementById('result').innerHTML = '❌ 配置文件未加载';
+        }
+        
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const result = document.getElementById('result');
+            
+            if (!username || !password) {
+                result.innerHTML = '请输入用户名和密码';
+                return;
+            }
+            
+            try {
+                result.innerHTML = '登录中...';
+                const user = await AV.User.logIn(username, password);
+                result.innerHTML = '✅ 登录成功！用户: ' + user.get('username');
+                console.log('登录成功:', user);
+            } catch (error) {
+                result.innerHTML = '❌ 登录失败: ' + error.message;
+                console.error('登录失败:', error);
+            }
+        }
+    </script>
+</body>
+</html>
