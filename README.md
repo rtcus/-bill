@@ -82,9 +82,9 @@
 系统默认使用测试环境的LeanCloud配置：
 ```javascript
 AV.init({
-    appId: 'qWTZ0xzNWk9B3bhk3vXGbfPl-gzGzoHsz',
-    appKey: 'n1MnTEgdQGWk2jouFA55NF1n',
-    serverURL: 'https://api.rtcus.cn'
+    appId: '***',
+    appKey: '***',
+    serverURL: '***'
 });
 ```
 
