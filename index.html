@@ -1861,8 +1861,8 @@
                     };
                 });
                 
-                // 过滤掉已经在账单中的数据 - 传入日期范围
-                await filterUsedCustomsData(startDate, endDate);
+                // 过滤掉已经在账单中的数据 - 传入年份和月份
+                await filterUsedCustomsData(parseInt(year), parseInt(month));
                 
                 // 应用查询条件
                 applyCustomsDataFilters();
@@ -1877,17 +1877,15 @@
         }
 
         // 过滤掉已经在账单中使用的报关数据
-        async function filterUsedCustomsData(startDate, endDate) {
+        async function filterUsedCustomsData(year, month) {
             try {
-                // 查询已生成账单的数据 - 添加日期范围过滤
+                // 查询已生成账单的数据 - 根据年份和月份过滤
                 const billQuery = new AV.Query('Bills');
 
-                // 只查询在指定日期范围内的账单
-                if (startDate && endDate) {
-                    const startDateStr = startDate.toISOString().split('T')[0];
-                    const endDateStr = endDate.toISOString().split('T')[0];
-                    billQuery.greaterThanOrEqualTo('billDate', startDateStr);
-                    billQuery.lessThanOrEqualTo('billDate', endDateStr);
+                // 只查询指定年份和月份的账单
+                if (year && month) {
+                    billQuery.equalTo('year', year);
+                    billQuery.equalTo('month', month);
                 }
 
                 const billResults = await billQuery.find();
@@ -2847,10 +2845,11 @@
                     ...customFeeValues
                 ];
                 
-                // 创建账单对象
+                // 创建账单对象 - 账单日期设置为查询月份的最后一天
+                const billMonthDate = new Date(year, month, 0);
                 const newBill = {
                     billNo: generateBillNo(),
-                    billDate: new Date().toISOString().split('T')[0],
+                    billDate: billMonthDate.toISOString().split('T')[0],
                     companyName: companyName,
                     year: year,
                     month: month,
