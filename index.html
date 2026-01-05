@@ -1832,13 +1832,24 @@
             try {
                 // 查询报关数据 - 按申报日期筛选
                 const query = new AV.Query('Tracking');
-                
-                // 添加查询条件：按申报日期筛选
+
+                // 添加查询条件：按申报日期筛选 - 使用本地时间方法构建日期字符串，避免时区问题
                 const startDate = new Date(year, month - 1, 1);
                 const endDate = new Date(year, month, 0);
-                
-                query.greaterThanOrEqualTo('declareDate', startDate.toISOString().split('T')[0]);
-                query.lessThanOrEqualTo('declareDate', endDate.toISOString().split('T')[0]);
+
+                // 格式化日期为 YYYY-MM-DD，使用本地时间而非 UTC
+                const formatDateToLocal = (date) => {
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    return `${y}-${m}-${d}`;
+                };
+
+                const startDateStr = formatDateToLocal(startDate);
+                const endDateStr = formatDateToLocal(endDate);
+
+                query.greaterThanOrEqualTo('declareDate', startDateStr);
+                query.lessThanOrEqualTo('declareDate', endDateStr);
                 
                 query.ascending('declareDate');
                 const results = await query.find();
