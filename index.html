@@ -1861,8 +1861,8 @@
                     };
                 });
                 
-                // 过滤掉已经在账单中的数据
-                await filterUsedCustomsData();
+                // 过滤掉已经在账单中的数据 - 传入日期范围
+                await filterUsedCustomsData(startDate, endDate);
                 
                 // 应用查询条件
                 applyCustomsDataFilters();
@@ -1877,12 +1877,21 @@
         }
 
         // 过滤掉已经在账单中使用的报关数据
-        async function filterUsedCustomsData() {
+        async function filterUsedCustomsData(startDate, endDate) {
             try {
-                // 查询已生成账单的数据
+                // 查询已生成账单的数据 - 添加日期范围过滤
                 const billQuery = new AV.Query('Bills');
+
+                // 只查询在指定日期范围内的账单
+                if (startDate && endDate) {
+                    const startDateStr = startDate.toISOString().split('T')[0];
+                    const endDateStr = endDate.toISOString().split('T')[0];
+                    billQuery.greaterThanOrEqualTo('billDate', startDateStr);
+                    billQuery.lessThanOrEqualTo('billDate', endDateStr);
+                }
+
                 const billResults = await billQuery.find();
-                
+
                 const usedIds = new Set();
                 billResults.forEach(bill => {
                     const billData = bill.toJSON();
@@ -1894,10 +1903,10 @@
                         });
                     }
                 });
-                
+
                 // 过滤掉已使用的数据
                 customsDataForBilling = customsDataForBilling.filter(item => !usedIds.has(item.id));
-                
+
             } catch (error) {
                 console.error('过滤已使用数据失败:', error);
             }
