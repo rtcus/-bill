@@ -598,6 +598,9 @@
             <div class="table-card-header d-flex justify-content-between align-items-center">
                 <span>账单列表</span>
                 <div>
+                    <button class="btn btn-sm btn-outline-info me-2" id="showHistoryBills">
+                        <i class="fas fa-history"></i> 历史账单
+                    </button>
                     <button class="btn btn-sm btn-outline-primary me-2" id="importBills">
                         <i class="fas fa-upload"></i> 导入
                     </button>
@@ -859,6 +862,115 @@
                     <button type="button" class="btn btn-success" id="exportBillPdf" disabled>
                         <i class="fas fa-file-pdf"></i> 导出PDF
                     </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 历史账单模态框 -->
+    <div class="modal fade" id="historyBillsModal" tabindex="-1" aria-labelledby="historyBillsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl-custom">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="historyBillsModalLabel">历史账单管理</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-3">
+                            <label for="historyYear" class="form-label">年份</label>
+                            <select class="form-select" id="historyYear">
+                                <option value="">选择年份</option>
+                                <option value="2023">2023</option>
+                                <option value="2024">2024</option>
+                                <option value="2025">2025</option>
+                                <option value="2026">2026</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <label for="historyMonth" class="form-label">月份</label>
+                            <select class="form-select" id="historyMonth">
+                                <option value="">选择月份</option>
+                                <option value="1">1月</option>
+                                <option value="2">2月</option>
+                                <option value="3">3月</option>
+                                <option value="4">4月</option>
+                                <option value="5">5月</option>
+                                <option value="6">6月</option>
+                                <option value="7">7月</option>
+                                <option value="8">8月</option>
+                                <option value="9">9月</option>
+                                <option value="10">10月</option>
+                                <option value="11">11月</option>
+                                <option value="12">12月</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-primary w-100" id="searchHistoryBills">
+                                <i class="fas fa-search"></i> 查询历史账单
+                            </button>
+                        </div>
+                        <div class="col-md-3 d-flex align-items-end">
+                            <button class="btn btn-success w-100" id="showUploadHistoryBillForm">
+                                <i class="fas fa-plus"></i> 添加历史账单
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 添加历史账单表单 -->
+                    <div id="addHistoryBillForm" style="display: none;" class="card mb-4">
+                        <div class="card-body">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <label for="historyCompanyName" class="form-label">公司名称 *</label>
+                                    <input type="text" class="form-control" id="historyCompanyName" placeholder="输入公司名称" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="historyTotalAmount" class="form-label">总金额 *</label>
+                                    <input type="number" class="form-control" id="historyTotalAmount" placeholder="输入总金额" step="0.01" required>
+                                </div>
+                                <div class="col-md-3">
+                                    <label for="historyBillFile" class="form-label">账单文件 *</label>
+                                    <input type="file" class="form-control" id="historyBillFile" accept=".pdf,.xlsx,.xls,.json" multiple>
+                                    <div class="form-text">支持选择多个文件</div>
+                                </div>
+                                <div class="col-md-3 d-flex align-items-end">
+                                    <button class="btn btn-primary w-100" id="submitHistoryBill">
+                                        <i class="fas fa-save"></i> 保存历史账单
+                                    </button>
+                                    <button class="btn btn-secondary w-100 ms-2" id="cancelAddHistoryBill">
+                                        取消
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 历史账单列表 -->
+                    <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
+                        <table class="table table-sm table-bordered" id="historyBillsTable">
+                            <thead class="table-light sticky-header">
+                                <tr>
+                                    <th>序号</th>
+                                    <th>账单编号</th>
+                                    <th>账单日期</th>
+                                    <th>公司名称</th>
+                                    <th>总金额</th>
+                                    <th>年份</th>
+                                    <th>月份</th>
+                                    <th>账单状态</th>
+                                    <th>附件</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historyBillsBody">
+                                <!-- 历史账单数据将通过JavaScript动态填充 -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">关闭</button>
                 </div>
             </div>
         </div>
@@ -1338,7 +1450,37 @@
                 if (!checkLogin()) return;
                 showGenerateBillModal();
             });
-            
+
+            // 显示历史账单按钮
+            document.getElementById('showHistoryBills').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                showHistoryBillsModal();
+            });
+
+            // 查询历史账单按钮
+            document.getElementById('searchHistoryBills').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                searchHistoryBills();
+            });
+
+            // 显示添加历史账单表单
+            document.getElementById('showUploadHistoryBillForm').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                document.getElementById('addHistoryBillForm').style.display = 'block';
+            });
+
+            // 提交历史账单
+            document.getElementById('submitHistoryBill').addEventListener('click', function() {
+                if (!checkLogin()) return;
+                submitHistoryBill();
+            });
+
+            // 取消添加历史账单
+            document.getElementById('cancelAddHistoryBill').addEventListener('click', function() {
+                document.getElementById('addHistoryBillForm').style.display = 'none';
+                clearHistoryBillForm();
+            });
+
             // 查询报关数据按钮
             document.getElementById('searchCustomsData').addEventListener('click', function() {
                 if (!checkLogin()) return;
@@ -1482,6 +1624,7 @@
                 
                 const query = new AV.Query('Bills');
                 query.descending('billDate');
+                query.limit(1000);
                 const results = await query.find();
                 
                 billsData = results.map(item => {
@@ -3449,6 +3592,333 @@
             updateStatistics();
         }
 
+        // ========== 历史账单管理 ==========
+
+        // 历史账单数据
+        let historyBillsData = [];
+
+        // 显示历史账单模态框
+        function showHistoryBillsModal() {
+            const modal = new bootstrap.Modal(document.getElementById('historyBillsModal'));
+            modal.show();
+        }
+
+        // 查询历史账单
+        async function searchHistoryBills() {
+            const year = document.getElementById('historyYear').value;
+            const month = document.getElementById('historyMonth').value;
+
+            if (!year || !month) {
+                alert('请选择年份和月份');
+                return;
+            }
+
+            try {
+                const query = new AV.Query('Bills');
+                query.equalTo('year', String(year));
+                query.equalTo('month', String(month));
+                query.descending('billDate');
+                query.include('billItems');
+                query.limit(1000);
+                const results = await query.find();
+
+                historyBillsData = results.map(item => {
+                    const data = item.toJSON();
+                    return {
+                        id: data.objectId,
+                        billNo: data.billNo || '',
+                        billDate: data.billDate || '',
+                        companyName: data.companyName || '',
+                        totalAmount: data.totalAmount || 0,
+                        year: data.year || year,
+                        month: data.month || month,
+                        billStatus: data.billStatus || '未确认',
+                        billItems: data.billItems || [],
+                        customFees: data.customFees || [],
+                        attachments: data.attachments || [],
+                        leanCloudObject: item
+                    };
+                });
+
+                renderHistoryBillsTable();
+
+                if (historyBillsData.length === 0) {
+                    alert('未找到该月份的历史账单');
+                } else {
+                    console.log(`查询到 ${historyBillsData.length} 条历史账单`);
+                }
+
+            } catch (error) {
+                console.error('查询历史账单失败:', error);
+                alert('查询历史账单失败: ' + error.message);
+            }
+        }
+
+        // 渲染历史账单表格
+        function renderHistoryBillsTable() {
+            const tbody = document.getElementById('historyBillsBody');
+            tbody.innerHTML = '';
+
+            if (historyBillsData.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted">暂无历史账单数据</td></tr>';
+                return;
+            }
+
+            historyBillsData.forEach((item, index) => {
+                const row = document.createElement('tr');
+
+                // 生成附件列内容
+                let attachmentHtml = '-';
+                if (item.attachments && item.attachments.length > 0) {
+                    attachmentHtml = item.attachments.map(att =>
+                        `<a href="#" class="btn btn-sm btn-link history-attachment-btn" data-id="${att.fileId}" data-name="${att.fileName}">
+                            <i class="fas fa-file"></i> ${att.fileName}
+                        </a>`
+                    ).join('<br>');
+                }
+
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${item.billNo}</td>
+                    <td>${item.billDate}</td>
+                    <td>${item.companyName}</td>
+                    <td class="fw-bold">${formatCurrency(item.totalAmount, 'CNY')}</td>
+                    <td>${item.year}</td>
+                    <td>${item.month}</td>
+                    <td>
+                        <span class="badge ${getStatusBadgeClass(item.billStatus)}">${item.billStatus}</span>
+                    </td>
+                    <td>${attachmentHtml}</td>
+                    <td>
+                        <button class="btn btn-sm btn-outline-primary history-view-btn" data-id="${item.id}">
+                            <i class="fas fa-eye"></i> 查看
+                        </button>
+                        <button class="btn btn-sm btn-outline-danger history-delete-btn" data-id="${item.id}">
+                            <i class="fas fa-trash"></i> 删除
+                        </button>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+
+            // 添加事件委托
+            tbody.querySelectorAll('.history-view-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    viewHistoryBill(this.dataset.id);
+                });
+            });
+
+            tbody.querySelectorAll('.history-delete-btn').forEach(btn => {
+                btn.addEventListener('click', function() {
+                    deleteHistoryBill(this.dataset.id);
+                });
+            });
+
+            // 添加下载附件事件
+            tbody.querySelectorAll('.history-attachment-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    const fileId = this.dataset.id;
+                    const fileName = this.dataset.name;
+                    await downloadAttachment(fileId, fileName);
+                });
+            });
+        }
+
+        // 查看历史账单详情
+        function viewHistoryBill(id) {
+            const bill = historyBillsData.find(item => item.id === id);
+            if (!bill) {
+                alert('找不到账单数据');
+                return;
+            }
+
+            // 使用现有的账单详情模态框显示
+            const item = billsData.find(b => b.id === id);
+            if (item) {
+                showBillDetail(id);
+            } else {
+                // 如果不在当前billsData中，从LeanCloud加载
+                loadAndShowBillDetail(id);
+            }
+        }
+
+        // 加载并显示账单详情
+        async function loadAndShowBillDetail(id) {
+            try {
+                const query = new AV.Query('Bills');
+                const result = await query.get(id);
+                const data = result.toJSON();
+
+                // 创建临时对象用于显示
+                const tempBill = {
+                    id: data.objectId,
+                    billNo: data.billNo || '',
+                    billDate: data.billDate || '',
+                    companyName: data.companyName || '',
+                    billStatus: data.billStatus || '未确认',
+                    totalAmount: data.totalAmount || 0,
+                    currency: data.currency || 'CNY',
+                    paymentDate: data.paymentDate || '',
+                    payee: data.payee || '',
+                    remark: data.remark || '',
+                    billItems: data.billItems || [],
+                    customFees: data.customFees || []
+                };
+
+                // 添加到 billsData 并显示详情
+                billsData.push(tempBill);
+                showBillDetail(id);
+
+            } catch (error) {
+                console.error('加载账单详情失败:', error);
+                alert('加载账单详情失败: ' + error.message);
+            }
+        }
+
+        // 删除历史账单
+        async function deleteHistoryBill(id) {
+            if (!confirm('确定要删除这条历史账单吗？删除后无法恢复。')) {
+                return;
+            }
+
+            try {
+                const query = new AV.Query('Bills');
+                const bill = await query.get(id);
+                await bill.destroy();
+
+                // 从数组中移除
+                historyBillsData = historyBillsData.filter(item => item.id !== id);
+                renderHistoryBillsTable();
+
+                alert('删除成功');
+
+            } catch (error) {
+                console.error('删除历史账单失败:', error);
+                alert('删除失败: ' + error.message);
+            }
+        }
+
+        // 清空历史账单表单
+        function clearHistoryBillForm() {
+            document.getElementById('historyCompanyName').value = '';
+            document.getElementById('historyTotalAmount').value = '';
+            document.getElementById('historyBillFile').value = '';
+        }
+
+        // 提交历史账单
+        async function submitHistoryBill() {
+            const year = document.getElementById('historyYear').value;
+            const month = document.getElementById('historyMonth').value;
+            const companyName = document.getElementById('historyCompanyName').value.trim();
+            const totalAmount = parseFloat(document.getElementById('historyTotalAmount').value);
+            const fileInput = document.getElementById('historyBillFile');
+            const files = fileInput.files;
+
+            // 验证必填字段
+            if (!year || !month) {
+                alert('请选择年份和月份');
+                return;
+            }
+            if (!companyName) {
+                alert('请输入公司名称');
+                return;
+            }
+            if (isNaN(totalAmount)) {
+                alert('请输入有效的总金额');
+                return;
+            }
+            if (files.length === 0) {
+                alert('请选择账单文件');
+                return;
+            }
+
+            try {
+                // 创建账单对象
+                const billObject = new AV.Object('Bills');
+                billObject.set('billNo', generateBillNo());
+                billObject.set('billDate', new Date(year, month, 0).toISOString().split('T')[0]);
+                billObject.set('companyName', companyName);
+                billObject.set('totalAmount', totalAmount);
+                billObject.set('currency', 'CNY');
+                billObject.set('billStatus', '未确认');
+                billObject.set('year', String(year));
+                billObject.set('month', String(month));
+                billObject.set('billItems', []);
+                billObject.set('customFees', []);
+
+                // 上传多个文件作为附件
+                const attachments = [];
+                for (let i = 0; i < files.length; i++) {
+                    const file = files[i];
+                    const avFile = new AV.File(file.name, file);
+                    const fileResult = await avFile.save();
+
+                    attachments.push({
+                        id: Date.now().toString() + i,
+                        fileId: fileResult.id,
+                        fileName: file.name,
+                        fileType: getFileType(file.name),
+                        uploadTime: new Date().toISOString()
+                    });
+                }
+
+                billObject.set('attachments', attachments);
+
+                // 保存账单
+                await billObject.save();
+
+                alert(`历史账单保存成功，共上传${files.length}个文件`);
+
+                // 清空表单并隐藏
+                clearHistoryBillForm();
+                document.getElementById('addHistoryBillForm').style.display = 'none';
+
+                // 刷新历史账单列表
+                await searchHistoryBills();
+
+            } catch (error) {
+                console.error('保存历史账单失败:', error);
+                alert('保存失败: ' + error.message);
+            }
+        }
+
+        // 获取文件类型
+        function getFileType(fileName) {
+            const ext = fileName.split('.').pop().toLowerCase();
+            if (ext === 'pdf') return 'PDF';
+            if (ext === 'xlsx' || ext === 'xls') return 'Excel';
+            if (ext === 'json') return 'JSON';
+            return '文件';
+        }
+
+        // 下载附件
+        async function downloadAttachment(fileId, fileName) {
+            try {
+                const query = new AV.Query('_File');
+                query.equalTo('objectId', fileId);
+                const file = await query.first();
+
+                if (!file) {
+                    alert('文件不存在');
+                    return;
+                }
+
+                const url = file.get('url');
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = fileName;
+                a.target = '_blank';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+            } catch (error) {
+                console.error('下载附件失败:', error);
+                alert('下载附件失败: ' + error.message);
+            }
+        }
+
         // 更新账单分页
         function updateBillsPagination() {
             billsTotalPages = Math.ceil(filteredBillsData.length / billsItemsPerPage);
@@ -3518,13 +3988,13 @@
         async function saveBillToLeanCloud(billItem, isNew = false) {
             try {
                 let billObject;
-                
+
                 if (isNew) {
                     billObject = new AV.Object('Bills');
                 } else {
                     billObject = billItem.leanCloudObject;
                 }
-                
+
                 billObject.set('billNo', billItem.billNo);
                 billObject.set('billDate', billItem.billDate);
                 billObject.set('companyName', billItem.companyName);
@@ -3541,14 +4011,22 @@
                 billObject.set('billItems', billItem.billItems);
                 billObject.set('attachments', billItem.attachments || []);
                 billObject.set('customFees', billItem.customFees || []);
-                
+
+                // 设置年份和月份 - 转换为字符串类型
+                if (billItem.year) {
+                    billObject.set('year', String(billItem.year));
+                }
+                if (billItem.month) {
+                    billObject.set('month', String(billItem.month));
+                }
+
                 await billObject.save();
-                
+
                 if (isNew) {
                     billItem.leanCloudObject = billObject;
                     billItem.id = billObject.id;
                 }
-                
+
                 return true;
             } catch (error) {
                 console.error('保存到LeanCloud失败:', error);
