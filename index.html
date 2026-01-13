@@ -3473,16 +3473,16 @@
                 if (item.leanCloudObject) {
                     item.leanCloudObject.set('attachments', attachments);
                     await item.leanCloudObject.save();
-                    
+
                     // 更新本地数据
                     item.attachments = attachments;
-                    
+
                     alert('发票上传成功');
                     fileInput.value = '';
                     document.getElementById('invoiceUploadSection').style.display = 'none';
-                    
-                    // 刷新发票列表
-                    showBillDetail(billId);
+
+                    // 直接刷新发票列表,避免重复显示模态框导致卡死
+                    refreshInvoiceList(item);
                 }
                 
             } catch (error) {
@@ -3496,6 +3496,45 @@
             if (!checkLogin()) return;
             document.getElementById('invoiceUpload').value = '';
             document.getElementById('invoiceUploadSection').style.display = 'none';
+        }
+
+        // 刷新发票列表
+        function refreshInvoiceList(item) {
+            const invoiceTbody = document.getElementById('invoiceList');
+            invoiceTbody.innerHTML = '';
+
+            if (item.attachments && item.attachments.length > 0) {
+                item.attachments.forEach((attachment, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>
+                            <a href="${attachment.fileUrl}" target="_blank">${attachment.name}</a>
+                        </td>
+                        <td>${attachment.type || '发票'}</td>
+                        <td>${attachment.uploadTime}</td>
+                        <td>
+                            <button class="btn btn-sm btn-outline-danger delete-invoice"
+                                    data-id="${item.id}"
+                                    data-attachment-id="${attachment.id}">
+                                删除
+                            </button>
+                        </td>
+                    `;
+                    invoiceTbody.appendChild(row);
+                });
+
+                // 绑定发票删除事件
+                document.querySelectorAll('.delete-invoice').forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        if (!checkLogin()) return;
+                        const billId = this.getAttribute('data-id');
+                        const attachmentId = this.getAttribute('data-attachment-id');
+                        deleteInvoice(billId, attachmentId);
+                    });
+                });
+            } else {
+                invoiceTbody.innerHTML = '<tr><td colspan="4" class="text-center">暂无发票</td></tr>';
+            }
         }
 
         // 删除发票
@@ -3529,14 +3568,14 @@
                 if (item.leanCloudObject) {
                     item.leanCloudObject.set('attachments', updatedAttachments);
                     await item.leanCloudObject.save();
-                    
+
                     // 更新本地数据
                     item.attachments = updatedAttachments;
-                    
+
                     alert('发票删除成功');
-                    
-                    // 刷新发票列表
-                    showBillDetail(billId);
+
+                    // 直接刷新发票列表,避免重复显示模态框导致卡死
+                    refreshInvoiceList(item);
                 }
                 
             } catch (error) {
